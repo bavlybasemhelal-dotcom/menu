@@ -26,7 +26,13 @@ export function safeFacebook(url: string) {
   }
 }
 export const whatsappUrl = whatsappLink;
+export function isBridgeImageUrl(url: string) {
+  return /^https:\/\/script\.google\.com\/macros\/s\/[a-zA-Z0-9_-]+\/exec\?action=image&fileId=[a-zA-Z0-9_-]+$/.test(
+    url,
+  );
+}
 export function isDriveAssetUrl(url: string) {
+  if (isBridgeImageUrl(url)) return true;
   try {
     const u = new URL(url);
     return (

@@ -23,7 +23,7 @@ import {
   Loading,
   Pagination,
 } from "../../components/ui";
-import { MediaPicker } from "./Selectors";
+import ImageField, { useImageWork } from "./ImageField";
 import { stripProduct } from "./ContentLists";
 import { ProductCard } from "../catalog/Cards";
 export function MoneyField({
@@ -128,6 +128,11 @@ export default function ProductEditor() {
     ),
     categories = useList("categories", { admin: true, pageSize: 24 }),
     [value, setValue] = useState<ProductData>(emptyProduct),
+    {
+      busy: imageBusy,
+      set: setImageBusy,
+      isBusy: isImageBusy,
+    } = useImageWork(),
     a = useAction();
   useEffect(() => {
     if (loaded.data) setValue(stripProduct(loaded.data));
@@ -159,6 +164,7 @@ export default function ProductEditor() {
       <form
         onSubmit={(e) => {
           e.preventDefault();
+          if (isImageBusy()) return;
           void a.run(
             async () => {
               const newId = await saveProduct(value, id);
@@ -225,7 +231,10 @@ export default function ProductEditor() {
               </div>
             </Panel>
             <Panel title={t("٢ · الصور والوسائط", "2 · Images and media")}>
-              <MediaPicker
+              <ImageField
+                folder="products"
+                label={t("رفع صور المنتج", "Upload product images")}
+                onBusyChange={setImageBusy}
                 value={value.imageMediaIds}
                 onChange={(v) => patch("imageMediaIds", v)}
               />
@@ -559,7 +568,7 @@ export default function ProductEditor() {
           <Link to="/admin/products" className="button button-ghost">
             {t("الرجوع", "Back")}
           </Link>
-          <Button disabled={a.busy}>
+          <Button disabled={a.busy || imageBusy}>
             <Save size={18} />
             {a.busy
               ? t("جارٍ الحفظ…", "Saving…")

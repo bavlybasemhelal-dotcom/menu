@@ -125,7 +125,15 @@ test("admin changes name/logo, creates product, edits price and publishes offer;
   await login(page);
   await page.goto("/admin/settings");
   await nameFields(page, "اسم المحل", arName, "Dynamic test store");
+  await page
+    .getByText("الصور السابقة واستعادة رفع غير مكتمل", { exact: true })
+    .click();
   await page.getByRole("button", { name: /Browser test logo/ }).click();
+  await expect(
+    page
+      .getByRole("group", { name: "اسم المحل", exact: true })
+      .getByLabel("العربية", { exact: true }),
+  ).toHaveValue(arName);
   await page
     .getByRole("button", { name: "حفظ الإعدادات", exact: true })
     .click();

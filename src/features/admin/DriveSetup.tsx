@@ -19,6 +19,7 @@ import {
   testScriptConnection,
 } from "../../integrations/drive/apps-script";
 import type { PrivateConfig } from "../products/models";
+import DriveFiles from "./DriveFiles";
 import {
   Button,
   Field,
@@ -33,6 +34,7 @@ export default function DriveSetup() {
   const loaded = useDocument<PrivateConfig>("privateShopConfig/" + shopId);
   const [value, setValue] = useState(normalizeConfig());
   const [showScript, setShowScript] = useState(false);
+  const [showFiles, setShowFiles] = useState(false);
   const a = useAction();
   useEffect(() => {
     if (!loaded.loading) setValue(normalizeConfig(loaded.data));
@@ -376,12 +378,12 @@ export default function DriveSetup() {
             </h3>
             <p>
               {t(
-                "ارفع صورة صغيرة من الوسائط، وشارك نسخة العرض فقط، ثم افتح الرابط في نافذة متخفية. نجاح الرفع وحده لا يكفي: ظهور صفحة دخول أو فشل عرض الصورة داخل الموقع يمنع نشرها. المجلد الرئيسي والأصول يظلان خاصين.",
-                "Upload a small image in Media, share only the display asset, then open its link incognito. Upload success alone is insufficient: a sign-in page or failure to render in the site prevents publication. The root folder and originals remain private.",
+                "ارفع الصورة من مكانها مباشرة: المنتج أو الشعار أو القسم أو العرض أو البنر. الموقع يشارك نسخة العرض فقط ويتحقق من جلبها وفك ترميزها بدون دخول قبل إضافتها. احفظ البيانات، ثم راجع ظهورها في الكتالوج من نافذة متخفية. المجلد الرئيسي والأصول يظلان خاصين. يلزم سكريبت الإصدار 2 لعرض الصور داخل الموقع.",
+                "Upload directly in the product, logo, category, offer or banner editor. The site shares only the display copy and verifies tokenless fetch and decoding before attaching it. Save changes and check the catalog incognito. The root and originals stay private. Script version 2 is required for images to render in the site.",
               )}
             </p>
-            <Link to="/admin/media">
-              {t("فتح مكتبة الوسائط", "Open media library")}
+            <Link to="/admin/products/new">
+              {t("إضافة منتج وصورته", "Add a product and its image")}
             </Link>
           </div>
         </div>
@@ -453,6 +455,12 @@ export default function DriveSetup() {
         >
           {t("دليل Google الرسمي للنشر", "Official Google deployment guide")}
         </a>
+      </Panel>
+      <Panel>
+        <details onToggle={e => setShowFiles(e.currentTarget.open)}>
+          <summary>{t("ملفات Drive الإدارية والأصول الخاصة", "Administrative Drive files and private originals")}</summary>
+          {showFiles && <DriveFiles settings={normalizeConfig(loaded.data)} />}
+        </details>
       </Panel>
       {a.error && <Notice error>{a.error}</Notice>}
       {a.success && <Notice>{a.success}</Notice>}

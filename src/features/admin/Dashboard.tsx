@@ -149,10 +149,10 @@ export default function Dashboard() {
               "Apps Script needs setup and testing",
             )}{" "}
         ·{" "}
-        <Link to="/admin/media">
+        <Link to="/admin/products">
           {t(
-            "نتائج اختبار الصور تظهر لكل ملف في الوسائط، ولا تُستنتج من حالة الاتصال.",
-            "Public image verification is recorded per asset in Media, separately from connection status.",
+            "ارفع الصور واختبر عرضها مباشرة من محرر المنتج أو الشعار أو القسم أو العرض.",
+            "Upload and verify images directly in the product, logo, category or offer editor.",
           )}
         </Link>
       </Notice>
@@ -274,8 +274,8 @@ export default function Dashboard() {
           </Notice>
         )}
       </Panel>
-      <Link to="/admin/media" className="button button-ghost">
-        {t("إدارة مكتبة الوسائط", "Manage media library")}
+      <Link to="/admin/products" className="button button-ghost">
+        {t("إدارة المنتجات وصورها", "Manage products and images")}
       </Link>
     </>
   );

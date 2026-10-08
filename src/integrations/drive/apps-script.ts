@@ -125,7 +125,7 @@ export function scriptFile(value: Record<string, unknown>): ScriptFile {
 }
 export async function testScriptConnection(url: string) {
   const value = await request(url, { action: "ping" });
-  if (value.version !== 1)
+  if (value.version !== 2)
     throw Error(
       "Copy this catalog's script, then deploy a new version / انسخ سكريبت الكتالوج وأعد نشر نسخة جديدة",
     );
@@ -193,4 +193,9 @@ export function scriptImageUrl(id: string, resourceKey: string | null = null) {
     id +
     (resourceKey ? "&resourcekey=" + encodeURIComponent(resourceKey) : "")
   );
+}
+export function publicImageUrl(url: string, id: string) {
+  if (!isScriptUrl(url) || !/^[a-zA-Z0-9_-]+$/.test(id))
+    throw Error("Invalid public image URL");
+  return url + "?action=image&fileId=" + id;
 }

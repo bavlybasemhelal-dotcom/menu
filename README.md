@@ -80,3 +80,9 @@ Expected scripts in app `package.json`: `dev`, `lint`, `typecheck`, `test`, `bui
 ## Unresolved owner-provided values
 
 Firebase configuration and the owner UID are deployed. The owner-authorized Apps Script is deployed and its real connection/upload/share checks succeeded. Store name/logo, WhatsApp/Facebook details and actual catalog content remain owner-editable inputs. Anonymous image delivery and complete dynamic production acceptance must be checked independently; see IMPLEMENTATION_STATUS.md. Never put private account credentials in project files.
+
+## Image editing and current Drive protocol
+
+Upload images directly from products, store-logo settings, category covers and offer/banner editors. The standalone Media page has been removed; its old URL redirects to products. Previous images, display repair and incomplete-upload recovery are available inside each editor. Private administrative documents/videos and original recovery are in the Drive setup section.
+
+The Google script must use protocol 2; copy the generated code from Admin → Google Drive and redeploy a new version while preserving the /exec URL. Execute as Me, access Anyone; keep the app root/subfolders Restricted. Only selected display files are shared. Originals stay private, including GIF originals. The same free bridge supplies anonymous image bytes; only permanent links and metadata are stored in Firestore. Real anonymous rendering and inline Firebase/Drive editing have passed; release evidence and remaining operational limits are in IMPLEMENTATION_STATUS.md.

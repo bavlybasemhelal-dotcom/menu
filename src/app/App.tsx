@@ -12,7 +12,6 @@ import {
   LayoutDashboard,
   Tags,
   Settings,
-  Images,
   FolderSync,
   Layers,
   LogOut,
@@ -27,7 +26,6 @@ import Dashboard from "../features/admin/Dashboard";
 import SettingsPage from "../features/admin/Settings";
 import ProductEditor from "../features/admin/ProductEditor";
 import OfferEditor from "../features/admin/OfferEditor";
-import MediaLibrary from "../features/admin/MediaLibrary";
 import DriveSetup from "../features/admin/DriveSetup";
 import {
   ProductsList,
@@ -74,7 +72,6 @@ export function AdminLayout() {
     ["/admin/offers", "العروض", "Offers", Tags],
     ["/admin/settings", "الإعدادات", "Settings", Settings],
     ["/admin/banners", "البنرات", "Banners", Image],
-    ["/admin/media", "الوسائط", "Media", Images],
     ["/admin/drive", "Google Drive", "Google Drive", FolderSync],
   ] as const;
   return (
@@ -97,7 +94,7 @@ export function AdminLayout() {
         </aside>
         <main className="admin-content">
           <div className="mobile-nav">
-            <Link to="/admin/media">{t("الوسائط", "Media")}</Link>
+            <Link to="/admin/settings">{t("الإعدادات", "Settings")}</Link>
             <Link to="/admin/drive">Drive</Link>
             <Link to="/admin/banners">{t("البنرات", "Banners")}</Link>
             <Button
@@ -210,7 +207,7 @@ export default function App() {
               <Route path="banners" element={<OffersList banners />} />
               <Route path="offers/new" element={<OfferEditor />} />
               <Route path="offers/:id" element={<OfferEditor />} />
-              <Route path="media" element={<MediaLibrary />} />
+              <Route path="media" element={<Navigate to="/admin/products" replace />} />
               <Route path="drive" element={<DriveSetup />} />
               <Route
                 path="integrations/google-drive"

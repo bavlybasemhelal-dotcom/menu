@@ -1,6 +1,8 @@
 # Decisions, source-vs-inference, external blockers
 
-## Latest owner amendment: reference Nexara Drive connection
+The current implementation uses only Apps Script, with inline media editors and real anonymous image acceptance proven on 2026-10-09. Later amendments below supersede the historical setup blockers and direct-adapter notes.
+
+## Historical owner amendment: reference Nexara Drive connection
 
 - On 2026-10-08 the owner requested the exact Drive workflow from D:/Projects/Nexera/Nexara. Read-only audit covered AGENTS/README/referenced plan, lib/services/google_drive_service.dart, DoctorDriveSettings, the settings_tab.dart inline guide/script and google_drive_script/nexara_drive_script.js. The reference project was not edited.
 - This is explicit authorization to add Google Apps Script as the default bridge, superseding the original GIS-only architecture. It preserves Firebase data/Hosting and Google Drive media, with no billing/services change.
@@ -19,7 +21,7 @@
 - Products support nullable independent piece, box and carton prices and packing counts, following the owner's later amendment recorded below.
 - Discount type percent/fixed, selected target and optional schedule; bundles have independent final price.
 - Firebase Auth + Firestore + Hosting in Spark; owner Google Drive media; no Firebase Storage/Functions/paid backend.
-- Google Drive anonymous public-image display **not yet proven**.
+- Google Drive anonymous public-image display **proven on 2026-10-09**, including actual browser decoding and private-original denial; see the proof below and IMPLEMENTATION_STATUS.md.
 
 ## Implementation suggestions made by this handoff (not explicit decisions by owner)
 
@@ -93,4 +95,14 @@ Live result: neutral single-method UI and Rules are deployed; actual test/save o
 
 ## Client presentation amendment — 2026-10-09
 
+The image-delivery blocker described above is historical; see the real protocol 2 proof below.
+
 The owner requests compact visitor/admin layouts and demo data on the live site to show a client. The previously empty real catalog may now receive this explicitly authorized demonstration dataset. Use create-only writes with existence preconditions, stable `demo-` IDs and a local creation manifest; preserve owner data/edits and private configuration. All names, products, prices and offers remain editable Firestore data. No UI import of the dataset, schema or security-rule relaxation, fake phone numbers, or claimed Drive image verification. Optional media stays absent and uses the existing visual placeholders. Compact cards keep all configured price levels; packaging counts stay in full detail pages. Dense desktop grids expand to six columns, mobile stays two columns with readable controls. Hide inactive single-page pagination to avoid wasting space, while preserving controls for multiple pages.
+
+## Inline media and public display resolution — 2026-10-09
+
+Owner requests direct image upload where each image belongs and removal/distribution of the Media page. Keep the existing Apps Script/Drive/Firestore architecture and media collection; add public read-only image delivery to the same bridge instead of adding another provider or service. Protocol 2 validates app-folder membership, file sharing, image MIME/size and private-original exclusion. Public image bytes exist only transiently in the browser; persisted content remains links/metadata.
+
+The owner updated the Google deployment. Live ping initially returned FOLDER_NOT_PRIVATE because the root had been shared publicly; the owner restricted the root/subfolders. Selected display-file links were shared separately. Real anonymous Chromium fetched and decoded the 4×4 WebP probe and the owner's 720×1600 uploaded WebP. Both original files and a foreign-file ID were rejected. Only those two tested existing display records were marked verified with update-time preconditions; unrelated catalog content and originals were preserved.
+
+A real admin used the inline product uploader against actual Firebase/Drive. An unsigned visitor decoded the image, received a price edit and image removal live. The temporary published product was removed afterward; small verification files remain unused in Drive with usage guards intact. Synthetic network fixtures separately test every editor, errors/recovery and GIF replacement; they are not substituted for the real Drive evidence.

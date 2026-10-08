@@ -260,7 +260,11 @@ function CategoryStrip({
           onClick={() => onSelect(c.id)}
         >
           {c.coverMediaId && (
-            <MediaImage id={c.coverMediaId} alt={localize(c.name, language)} />
+            <MediaImage
+              id={c.coverMediaId}
+              revision={c.updatedAt}
+              alt={localize(c.name, language)}
+            />
           )}{" "}
           {localize(c.name, language)}
         </button>
@@ -346,6 +350,7 @@ function Hero({ offers }: { offers: Offer[] }) {
       {(offer?.imageMediaId || store.logoMediaId) && (
         <MediaImage
           id={offer?.imageMediaId || store.logoMediaId}
+          revision={offer?.updatedAt}
           alt={
             offer
               ? localize(offer.name, language)
@@ -478,7 +483,11 @@ export function ProductDetail() {
       <Back />
       <div className="detail-grid">
         <div className="detail-image">
-          <MediaImage id={p.imageMediaIds[image]} alt={name} />
+          <MediaImage
+            id={p.imageMediaIds[image]}
+            revision={p.updatedAt}
+            alt={name}
+          />
           <div className="thumbnail-list">
             {p.imageMediaIds.map((mid, i) => (
               <button
@@ -487,7 +496,7 @@ export function ProductDetail() {
                 onClick={() => setImage(i)}
                 aria-label={t("صورة", "Image") + " " + (i + 1)}
               >
-                <MediaImage id={mid} alt={name} />
+                <MediaImage id={mid} revision={p.updatedAt} alt={name} />
               </button>
             ))}
           </div>
@@ -623,7 +632,7 @@ export function OfferDetail() {
       <Back />
       <div className="detail-grid">
         <div className="detail-image">
-          <MediaImage id={o.imageMediaId} alt={name} />
+          <MediaImage id={o.imageMediaId} revision={o.updatedAt} alt={name} />
         </div>
         <div className="detail-content">
           <span className="eyebrow">

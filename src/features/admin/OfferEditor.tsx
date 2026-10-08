@@ -21,7 +21,8 @@ import {
   Panel,
   useAction,
 } from "../../components/ui";
-import { MediaPicker, ProductPicker, ProductLabel } from "./Selectors";
+import { ProductPicker, ProductLabel } from "./Selectors";
+import ImageField, { useImageWork } from "./ImageField";
 import { MoneyField, ScheduleFields } from "./ProductEditor";
 import { stripOffer } from "./ContentLists";
 export default function OfferEditor() {
@@ -36,6 +37,11 @@ export default function OfferEditor() {
       ...emptyOffer(),
       placement: params.has("banner") ? "hero" : "none",
     })),
+    {
+      busy: imageBusy,
+      set: setImageBusy,
+      isBusy: isImageBusy,
+    } = useImageWork(),
     a = useAction();
   useEffect(() => {
     if (loaded.data) set(stripOffer(loaded.data));
@@ -66,6 +72,7 @@ export default function OfferEditor() {
       <form
         onSubmit={(e) => {
           e.preventDefault();
+          if (isImageBusy()) return;
           void a.run(
             async () => {
               const newId = await saveOffer(value, id);
@@ -268,7 +275,10 @@ export default function OfferEditor() {
           )}
         </Panel>
         <Panel title={t("٣ · الصورة ومكان الظهور", "3 · Image and placement")}>
-          <MediaPicker
+          <ImageField
+            folder="offers"
+            label={t("رفع صورة العرض أو البنر", "Upload offer or banner image")}
+            onBusyChange={setImageBusy}
             max={1}
             value={value.imageMediaId ? [value.imageMediaId] : []}
             onChange={(v) => patch("imageMediaId", v[0] || null)}
@@ -321,7 +331,7 @@ export default function OfferEditor() {
           <Link to="/admin/offers" className="button button-ghost">
             {t("الرجوع", "Back")}
           </Link>
-          <Button disabled={a.busy}>
+          <Button disabled={a.busy || imageBusy}>
             <Save size={18} />
             {t("حفظ العرض", "Save offer")}
           </Button>

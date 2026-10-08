@@ -26,7 +26,7 @@ import {
   Pagination,
   useAction,
 } from "../../components/ui";
-import { MediaPicker } from "./Selectors";
+import ImageField, { useImageWork } from "./ImageField";
 export function ProductsList() {
   const { t, language, store } = useUI(),
     [search, setSearch] = useState(""),
@@ -449,6 +449,11 @@ export function Categories() {
     list = useList("categories", { admin: true }),
     [id, setId] = useState<string | undefined>(),
     [editing, setEditing] = useState(false),
+    {
+      busy: imageBusy,
+      set: setImageBusy,
+      isBusy: isImageBusy,
+    } = useImageWork(),
     [value, setValue] = useState<CategoryData>({
       name: emptyText(),
       description: emptyText(),
@@ -467,6 +472,8 @@ export function Categories() {
         )}
         action={
           <Button
+            type="button"
+            disabled={imageBusy}
             onClick={() => {
               setId(undefined);
               setValue({
@@ -491,6 +498,7 @@ export function Categories() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
+              if (isImageBusy()) return;
               void a.run(
                 async () => {
                   await saveCategory(value, id);
@@ -539,21 +547,26 @@ export function Categories() {
               </Field>
             </div>
             <Field label={t("صورة القسم", "Category image")}>
-              <MediaPicker
+              <ImageField
+                key={id || "new-category"}
+                folder="branding"
+                label={t("رفع صورة القسم", "Upload category image")}
+                onBusyChange={setImageBusy}
                 max={1}
                 value={value.coverMediaId ? [value.coverMediaId] : []}
                 onChange={(v) =>
-                  setValue({ ...value, coverMediaId: v[0] || null })
+                  setValue((old) => ({ ...old, coverMediaId: v[0] || null }))
                 }
               />
             </Field>
             <div className="button-row">
-              <Button disabled={a.busy}>
+              <Button disabled={a.busy || imageBusy}>
                 {t("حفظ القسم", "Save category")}
               </Button>
               <Button
                 type="button"
                 className="button-ghost"
+                disabled={imageBusy}
                 onClick={() => setEditing(false)}
               >
                 {t("إلغاء", "Cancel")}
@@ -589,6 +602,7 @@ export function Categories() {
                       <div className="table-actions">
                         <Button
                           className="button-ghost"
+                          disabled={imageBusy}
                           aria-label={t("تعديل", "Edit")}
                           onClick={() => {
                             setId(c.id);

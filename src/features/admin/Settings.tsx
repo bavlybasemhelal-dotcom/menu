@@ -18,12 +18,24 @@ import {
   Panel,
   useAction,
   MediaImage,
+  Loading,
 } from "../../components/ui";
-import { MediaPicker } from "./Selectors";
+import ImageField, { useImageWork } from "./ImageField";
 export default function Settings() {
+  const { storeLoading, storeError } = useUI();
+  if (storeLoading) return <Loading />;
+  if (storeError) return <Notice error>{storeError}</Notice>;
+  return <SettingsForm />;
+}
+function SettingsForm() {
   const { store, storeLoading, t } = useUI(),
     [value, setValue] = useState<StorePublic>(store),
     [dirty, setDirty] = useState(false),
+    {
+      busy: imageBusy,
+      set: setImageBusy,
+      isBusy: isImageBusy,
+    } = useImageWork(),
     a = useAction();
   useEffect(() => {
     if (!dirty) setValue(store);
@@ -44,6 +56,7 @@ export default function Settings() {
       <form
         onSubmit={(e) => {
           e.preventDefault();
+          if (isImageBusy()) return;
           void a.run(
             async () => {
               await saveStore(value);
@@ -73,7 +86,10 @@ export default function Settings() {
             onChange={(v) => patch("description", v)}
           />
           <Field label={t("شعار المحل", "Store logo")}>
-            <MediaPicker
+            <ImageField
+              folder="branding"
+              label={t("رفع شعار المحل", "Upload store logo")}
+              onBusyChange={setImageBusy}
               max={1}
               value={value.logoMediaId ? [value.logoMediaId] : []}
               onChange={(v) => patch("logoMediaId", v[0] || null)}
@@ -181,7 +197,7 @@ export default function Settings() {
               "Saving updates the visitor immediately",
             )}
           </small>
-          <Button disabled={a.busy || storeLoading}>
+          <Button disabled={a.busy || storeLoading || imageBusy}>
             <Save size={18} />
             {t("حفظ الإعدادات", "Save settings")}
           </Button>

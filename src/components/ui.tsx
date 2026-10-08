@@ -3,6 +3,7 @@ import {
   cloneElement,
   isValidElement,
   useId,
+  useRef,
   type ReactNode,
   type ButtonHTMLAttributes,
 } from "react";
@@ -29,7 +30,22 @@ import { useDocument } from "../integrations/firebase/hooks";
 import { shopId } from "../integrations/firebase/client";
 import { localize } from "../features/products/logic";
 import type { Localized, Media } from "../features/products/models";
-import { safeFacebook, whatsappUrl, isDriveAssetUrl } from "../utils/urls";
+import {
+  safeFacebook,
+  whatsappUrl,
+  isDriveAssetUrl,
+  isBridgeImageUrl,
+} from "../utils/urls";
+import { anonymousImageBlob } from "../integrations/drive/client";
+const imageRequests = new Map<string, Promise<Blob>>();
+function sharedImageRequest(url: string) {
+  let request = imageRequests.get(url);
+  if (!request) {
+    request = anonymousImageBlob(url).finally(() => imageRequests.delete(url));
+    imageRequests.set(url, request);
+  }
+  return request;
+}
 export function Button({
   children,
   className = "",
@@ -67,30 +83,92 @@ export function MediaImage({
   id,
   alt,
   className = "",
+  revision,
 }: {
   id: string | null | undefined;
   alt: string;
   className?: string;
+  revision?: number;
 }) {
+  const { user, store } = useUI();
+  const mediaRevision = useMemo(
+    () => ({ user: user?.uid, store, revision }),
+    [user?.uid, store, revision],
+  );
   const { data } = useDocument<Media>(
       id ? "shops/" + shopId + "/media/" + id : null,
+      { live: false, revision: mediaRevision },
     ),
-    [failed, setFailed] = useState(false);
+    [failed, setFailed] = useState(false),
+    [asset, setAsset] = useState<{ url: string; src: string } | null>(null),
+    element = useRef<HTMLDivElement>(null);
+  const url =
+    data && data.id === id && data.status === "public_test_passed"
+      ? data.verifiedPublicAssetUrl
+      : null;
   useEffect(() => setFailed(false), [id, data?.verifiedPublicAssetUrl]);
+  useEffect(() => {
+    if (!url || !isBridgeImageUrl(url)) return;
+    let disposed = false,
+      objectUrl = "",
+      started = false;
+    const load = async () => {
+      if (started) return;
+      started = true;
+      try {
+        const blob = await sharedImageRequest(url);
+        if (disposed) return;
+        objectUrl = URL.createObjectURL(blob);
+        setAsset({ url, src: objectUrl });
+      } catch {
+        if (!disposed) setFailed(true);
+      }
+    };
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          observer.disconnect();
+          void load();
+        }
+      },
+      { rootMargin: "180px" },
+    );
+    if (element.current) observer.observe(element.current);
+    return () => {
+      disposed = true;
+      observer.disconnect();
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [url]);
+  const src =
+    url && isBridgeImageUrl(url)
+      ? asset?.url === url
+        ? asset.src
+        : null
+      : url;
   return (
-    <div className={"media-image " + className}>
+    <div
+      ref={element}
+      className={"media-image " + className}
+      data-media-id={id}
+      data-file-id={data?.driveFileId}
+    >
       {data?.status === "public_test_passed" &&
       data.verifiedPublicAssetUrl &&
       isDriveAssetUrl(data.verifiedPublicAssetUrl) &&
       !failed ? (
-        <img
-          src={data.verifiedPublicAssetUrl}
-          alt={alt}
-          loading="lazy"
-          referrerPolicy="strict-origin-when-cross-origin"
-          crossOrigin="anonymous"
-          onError={() => setFailed(true)}
-        />
+        src ? (
+          <img
+            src={src}
+            alt={alt}
+            loading="lazy"
+            referrerPolicy="strict-origin-when-cross-origin"
+            crossOrigin="anonymous"
+            onError={() => setFailed(true)}
+          />
+        ) : (
+          <LoaderCircle className="spin" size={22} aria-label={alt} />
+        )
       ) : id ? (
         <ImageOff size={36} aria-label={alt} />
       ) : (
@@ -99,7 +177,7 @@ export function MediaImage({
     </div>
   );
 }
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 export function Brand({ large = false }: { large?: boolean }) {
   const { store, language, t } = useUI();
   return (
@@ -341,14 +419,24 @@ export function Pagination({
   if (page === 1 && !hasNext) return null;
   return (
     <div className="pagination">
-      <Button className="button-ghost" disabled={page === 1} onClick={first}>
+      <Button
+        type="button"
+        className="button-ghost"
+        disabled={page === 1}
+        onClick={first}
+      >
         <ChevronRight size={16} />
         {t("البداية", "First")}
       </Button>
       <span>
         {t("صفحة", "Page")} {page}
       </span>
-      <Button className="button-ghost" disabled={!hasNext} onClick={next}>
+      <Button
+        type="button"
+        className="button-ghost"
+        disabled={!hasNext}
+        onClick={next}
+      >
         {t("التالي", "Next")}
         <ChevronLeft size={16} />
       </Button>

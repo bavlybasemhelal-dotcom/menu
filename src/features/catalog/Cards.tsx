@@ -18,7 +18,11 @@ export function ProductCard({
     id = "id" in product ? product.id : "";
   const card = (
     <>
-      <MediaImage id={product.imageMediaIds[0]} alt={name} />
+      <MediaImage
+        id={product.imageMediaIds[0]}
+        revision={"updatedAt" in product ? product.updatedAt : undefined}
+        alt={name}
+      />
       {hasActiveDiscount(product) && (
         <span className="badge badge-discount">
           <Tag size={12} />
@@ -78,6 +82,7 @@ export function OfferCard({ offer }: { offer: Offer }) {
     <Link to={"/offers/" + offer.id} className="offer-card">
       <MediaImage
         id={offer.imageMediaId}
+        revision={offer.updatedAt}
         alt={localize(offer.name, language)}
       />
       <div className="offer-info">

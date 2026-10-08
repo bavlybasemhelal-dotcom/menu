@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   doc,
+  getDocFromServer,
   limit,
   onSnapshot,
   orderBy,
@@ -16,7 +17,11 @@ import type {
 } from "../../features/products/models";
 import { db, shopId } from "./client";
 import { decode } from "./codec";
-export function useDocument<T>(path: string | null) {
+export function useDocument<T>(
+  path: string | null,
+  options: { live?: boolean; revision?: unknown } = {},
+) {
+  const { live = true, revision } = options;
   const [state, set] = useState<{
     data: T | null;
     loading: boolean;
@@ -34,6 +39,26 @@ export function useDocument<T>(path: string | null) {
       return;
     }
     set({ data: null, loading: true, error: "" });
+    if (!live) {
+      let active = true;
+      void getDocFromServer(doc(db, path))
+        .then((s) => {
+          if (active)
+            set({
+              data: s.exists()
+                ? { ...(decode(s.data()) as T), id: s.id }
+                : null,
+              loading: false,
+              error: "",
+            });
+        })
+        .catch((e) => {
+          if (active) set({ data: null, loading: false, error: e.code });
+        });
+      return () => {
+        active = false;
+      };
+    }
     return onSnapshot(
       doc(db, path),
       (s) =>
@@ -44,10 +69,11 @@ export function useDocument<T>(path: string | null) {
         }),
       (e) => set({ data: null, loading: false, error: e.code }),
     );
-  }, [path]);
+  }, [path, live, revision]);
   return state;
 }
 export interface ListOptions {
+  enabled?: boolean;
   admin?: boolean;
   category?: string;
   search?: string;
@@ -63,6 +89,7 @@ export function useList<K extends CollectionName>(
   options: ListOptions = {},
 ) {
   const {
+    enabled = true,
     admin = false,
     category = "",
     search = "",
@@ -74,6 +101,7 @@ export function useList<K extends CollectionName>(
     pageSize = 24,
   } = options;
   const key = [
+    enabled,
     name,
     admin,
     category,
@@ -99,11 +127,13 @@ export function useList<K extends CollectionName>(
     setPage(1);
   }, [key]);
   useEffect(() => {
-    if (!db) {
+    if (!db || !enabled) {
       set({
         data: [],
         loading: false,
-        error: "Firebase configuration missing / إعداد Firebase غير مكتمل",
+        error: !db
+          ? "Firebase configuration missing / إعداد Firebase غير مكتمل"
+          : "",
         last: null,
         hasNext: false,
       });
@@ -160,6 +190,7 @@ export function useList<K extends CollectionName>(
     );
   }, [
     key,
+    enabled,
     cursor,
     name,
     admin,

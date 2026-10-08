@@ -53,9 +53,15 @@ it("Apps Script configuration is admin-only, validates endpoints and does not ac
   await assertFails(
     setDoc(doc(admin(), path), { ...config, lastTestedAt: null }),
   );
-  await assertFails(setDoc(doc(admin(), path), { ...config, driveProvider: "oauth" }));
-  await assertFails(setDoc(doc(admin(), path), { ...config, googleClientId: "removed-client" }));
-  await assertFails(setDoc(doc(admin(), path), { ...config, maxVideoBytes: 21 * 1024 * 1024 }));
+  await assertFails(
+    setDoc(doc(admin(), path), { ...config, driveProvider: "oauth" }),
+  );
+  await assertFails(
+    setDoc(doc(admin(), path), { ...config, googleClientId: "removed-client" }),
+  );
+  await assertFails(
+    setDoc(doc(admin(), path), { ...config, maxVideoBytes: 21 * 1024 * 1024 }),
+  );
 });
 it("Drive bridge media needs explicit anonymous image proof before published use", async () => {
   const path = "shops/main/media/script-image";
@@ -70,7 +76,8 @@ it("Drive bridge media needs explicit anonymous image proof before published use
     role: "image",
     status: "metadata_saved",
     storageProvider: "apps_script",
-    driveDirectUrl: "https://drive.usercontent.google.com/download?export=view&id=script-file",
+    driveDirectUrl:
+      "https://drive.usercontent.google.com/download?export=view&id=script-file",
     driveDownloadUrl:
       "https://drive.google.com/uc?export=download&id=script-file",
     driveFolderId: "folder",
@@ -105,6 +112,19 @@ it("Drive bridge media needs explicit anonymous image proof before published use
   };
   await assertSucceeds(setDoc(doc(admin(), path), ready));
   await assertSucceeds(getDoc(doc(visitor(), path)));
+  const bridgeUrl =
+    "https://script.google.com/macros/s/test-deployment/exec?action=image&fileId=script-file";
+  await assertSucceeds(
+    setDoc(doc(admin(), path), { ...ready, verifiedPublicAssetUrl: bridgeUrl }),
+  );
+  for (const url of [
+    bridgeUrl + "&idToken=secret",
+    bridgeUrl.replace("script.google.com", "script.google.com.attacker.test"),
+    bridgeUrl.replace("/exec?", "/dev?"),
+  ])
+    await assertFails(
+      setDoc(doc(admin(), path), { ...ready, verifiedPublicAssetUrl: url }),
+    );
   await assertFails(
     setDoc(doc(admin(), path), {
       ...ready,

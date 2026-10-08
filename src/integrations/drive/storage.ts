@@ -5,7 +5,7 @@ import {
   scriptShare,
   scriptRevoke,
   scriptList,
-  scriptImageUrl,
+  publicImageUrl,
   isScriptUrl,
   type MediaFolder,
 } from "./apps-script";
@@ -49,6 +49,6 @@ export async function storageList(config: PrivateConfig) {
     })),
   };
 }
-export function mediaCandidate(media: Media) {
-  return scriptImageUrl(media.driveFileId, media.resourceKey);
+export function mediaCandidate(media: Media, config: PrivateConfig) {
+  return publicImageUrl(config.webAppUrl || "", media.driveFileId);
 }

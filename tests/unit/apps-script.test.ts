@@ -6,6 +6,7 @@ import {
   isScriptUrl,
   scriptFile,
   scriptImageUrl,
+  publicImageUrl,
 } from "../../src/integrations/drive/apps-script";
 import { isDriveAssetUrl } from "../../src/utils/urls";
 import { normalizeConfig } from "../../src/integrations/drive/config";
@@ -27,6 +28,8 @@ function bridge(
     original?: boolean;
     revoked?: boolean;
     folderShared?: boolean;
+    publicFile?: boolean;
+    mimeType?: string;
   } = {},
 ) {
   const properties = new Map<string, string>();
@@ -51,14 +54,18 @@ function bridge(
     createFile: vi.fn(() => file),
   });
   const root = folder("Test files", "app-folder");
-  const setSharing = vi.fn(() => {
+  let fileAccess = options.publicFile ? "public" : "private";
+  const setSharing = vi.fn((access: string) => {
     if (options.sharingFails) throw Error("Workspace restricted sharing");
+    fileAccess = access;
   });
   const file = {
     getId: () => "file-id",
     getName: () => "photo.png",
     getSize: () => 3,
-    getMimeType: () => "image/png",
+    getMimeType: () => options.mimeType || "image/png",
+    getSharingAccess: () => fileAccess,
+    getBlob: () => ({ getBytes: () => [97, 98, 99] }),
     getUrl: () => "https://drive.google.com/file/d/file-id/view",
     getResourceKey: () => "",
     isTrashed: () => false,
@@ -82,7 +89,11 @@ function bridge(
     getFolderById: vi.fn(() => root),
     getFileById: vi.fn(() => file),
     getStorageUsed: () => 1000,
-    Access: { PRIVATE: "private", ANYONE_WITH_LINK: "public" },
+    Access: {
+      PRIVATE: "private",
+      ANYONE_WITH_LINK: "public",
+      ANYONE: "anyone",
+    },
     Permission: { VIEW: "view" },
   };
   const fetch = vi.fn(() => ({
@@ -113,6 +124,8 @@ function bridge(
     Utilities: {
       base64DecodeWebSafe: (value: string) => Buffer.from(value, "base64url"),
       base64Decode: (value: string) => [...Buffer.from(value, "base64")],
+      base64Encode: (value: Uint8Array) =>
+        Buffer.from(value).toString("base64"),
       newBlob: (bytes: Uint8Array) => ({
         getDataAsString: () => Buffer.from(bytes).toString(),
       }),
@@ -126,6 +139,10 @@ function bridge(
   });
   runInContext(buildDriveScript(config), context);
   return {
+    get: (parameter: Record<string, unknown> = {}) => {
+      context.event = { parameter };
+      return runInContext("doGet(event)", context);
+    },
     post: (payload: Record<string, unknown>) => {
       context.event = { postData: { contents: JSON.stringify(payload) } };
       return runInContext("doPost(event)", context);
@@ -167,6 +184,62 @@ it("only accepts the exact HTTPS /exec Google endpoint before sending credential
   expect(isScriptUrl("https://script.google.com/macros/s/test-id/exec")).toBe(
     true,
   );
+});
+it("anonymous image delivery is read-only and only exposes already-public app images", () => {
+  const unconfigured = bridge({ publicFile: true });
+  expect(unconfigured.get({ action: "image", fileId: "file-id" }).success).toBe(
+    false,
+  );
+  expect(unconfigured.drive.getRootFolder).not.toHaveBeenCalled();
+  const server = bridge({ publicFile: true });
+  server.post({ action: "ping", idToken: token() });
+  server.fetch.mockClear();
+  server.setSharing.mockClear();
+  expect(server.get({ action: "image", fileId: "file-id" })).toEqual({
+    success: true,
+    version: 2,
+    fileId: "file-id",
+    mimeType: "image/png",
+    fileSize: 3,
+    base64: "YWJj",
+  });
+  expect(server.fetch).not.toHaveBeenCalled();
+  expect(server.setSharing).not.toHaveBeenCalled();
+  server.post({ action: "revoke", idToken: token(), fileId: "file-id" });
+  expect(server.get({ action: "image", fileId: "file-id" }).success).toBe(
+    false,
+  );
+  for (const options of [
+    {},
+    { publicFile: true, original: true },
+    { publicFile: true, outside: true },
+    { publicFile: true, mimeType: "text/html" },
+  ]) {
+    const blocked = bridge(options);
+    blocked.post({ action: "ping", idToken: token() });
+    expect(blocked.get({ action: "image", fileId: "file-id" })).toEqual({
+      success: false,
+      error: "PUBLIC_IMAGE_UNAVAILABLE",
+    });
+  }
+  expect(
+    publicImageUrl("https://script.google.com/macros/s/test/exec", "file-id"),
+  ).toBe(
+    "https://script.google.com/macros/s/test/exec?action=image&fileId=file-id",
+  );
+  expect(
+    isDriveAssetUrl(
+      publicImageUrl("https://script.google.com/macros/s/test/exec", "file-id"),
+    ),
+  ).toBe(true);
+  expect(
+    isDriveAssetUrl(
+      publicImageUrl(
+        "https://script.google.com/macros/s/test/exec",
+        "file-id",
+      ) + "&idToken=secret",
+    ),
+  ).toBe(false);
 });
 it("uses Nexara's text/plain POST and redirect flow, with a per-request Firebase token", async () => {
   const fetch = vi

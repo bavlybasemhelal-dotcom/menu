@@ -16,12 +16,44 @@ const FOLDERS = {
   originals: "06_الأصول الخاصة (Private Originals)",
 };
 
-function doGet() {
-  return jsonResponse({
-    success: true,
-    service: "Catalog Drive Bridge",
-    version: 1,
-  });
+function doGet(e) {
+  try {
+    if (e && e.parameter && e.parameter.action === "image") {
+      // Anonymous reads never create folders, change sharing, or serve private originals.
+      const file = appFile(e.parameter.fileId, true);
+      if (isOriginal(file)) throw Error("PRIVATE_ORIGINAL");
+      if (
+        ![DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Access.ANYONE].includes(
+          file.getSharingAccess(),
+        )
+      )
+        throw Error("FILE_NOT_PUBLIC");
+      if (
+        !["image/jpeg", "image/png", "image/webp", "image/gif"].includes(
+          file.getMimeType(),
+        )
+      )
+        throw Error("UNSUPPORTED_TYPE");
+      if (!file.getSize() || file.getSize() > MAX_FILE_BYTES)
+        throw Error("FILE_TOO_LARGE");
+      return jsonResponse({
+        success: true,
+        version: 2,
+        fileId: file.getId(),
+        mimeType: file.getMimeType(),
+        fileSize: file.getSize(),
+        base64: Utilities.base64Encode(file.getBlob().getBytes()),
+      });
+    }
+    return jsonResponse({
+      success: true,
+      service: "Catalog Drive Bridge",
+      version: 2,
+    });
+  } catch (_) {
+    // Deliberately identical for inaccessible, private, original and foreign files.
+    return jsonResponse({ success: false, error: "PUBLIC_IMAGE_UNAVAILABLE" });
+  }
 }
 
 function doPost(e) {
@@ -39,7 +71,7 @@ function doPost(e) {
       const root = rootFolder();
       return jsonResponse({
         success: true,
-        version: 1,
+        version: 2,
         rootFolderId: root.getId(),
         rootFolderName: root.getName(),
         storageUsed: DriveApp.getStorageUsed(),
@@ -239,11 +271,16 @@ function fileInfo(file) {
   };
 }
 
-function appFile(id) {
+function appFile(id, readOnly) {
   if (typeof id !== "string" || !/^[a-zA-Z0-9_-]+$/.test(id))
     throw Error("INVALID_FILE");
-  const file = DriveApp.getFileById(id),
-    root = rootFolder().getId();
+  const savedRoot =
+    PropertiesService.getScriptProperties().getProperty("ROOT_FOLDER_ID");
+  if (readOnly && !savedRoot) throw Error("NOT_CONFIGURED");
+  const root = readOnly
+      ? privateFolder(DriveApp.getFolderById(savedRoot)).getId()
+      : rootFolder().getId(),
+    file = DriveApp.getFileById(id);
   if (file.isTrashed()) throw Error("INVALID_FILE");
   const parents = file.getParents();
   while (parents.hasNext()) {
