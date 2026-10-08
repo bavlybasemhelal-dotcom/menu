@@ -261,16 +261,28 @@ input[type="file"] {
   border-radius: 0;
   aspect-ratio: 1;
 }
-.brand-mark img {
+.brand-mark .media-image img {
   object-fit: contain;
 }
-.brand-large {
+.brand.brand-large {
   flex-direction: column;
-  font-size: 2.8rem;
+  width: min(680px, calc(100vw - 48px));
+  font-size: clamp(1.6rem, 6vw, 2.8rem);
+  gap: 18px;
+}
+.brand.brand-large > span:last-child {
+  width: 100%;
+  max-width: 100%;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+  text-align: center;
+  line-height: 1.45;
 }
 .brand-large .brand-mark {
-  width: 95px;
-  height: 95px;
+  width: clamp(112px, 16vw, 144px);
+  height: clamp(112px, 16vw, 144px);
   border-radius: 29px;
 }
 .desktop-nav {

@@ -84,18 +84,20 @@ export function MediaImage({
   alt,
   className = "",
   revision,
+  onSettled,
 }: {
   id: string | null | undefined;
   alt: string;
   className?: string;
   revision?: number;
+  onSettled?: (id: string) => void;
 }) {
   const { user, store } = useUI();
   const mediaRevision = useMemo(
     () => ({ user: user?.uid, store, revision }),
     [user?.uid, store, revision],
   );
-  const { data } = useDocument<Media>(
+  const { data, loading, error } = useDocument<Media>(
       id ? "shops/" + shopId + "/media/" + id : null,
       { live: false, revision: mediaRevision },
     ),
@@ -107,6 +109,18 @@ export function MediaImage({
       ? data.verifiedPublicAssetUrl
       : null;
   useEffect(() => setFailed(false), [id, data?.verifiedPublicAssetUrl]);
+  useEffect(() => {
+    if (!id || loading || (data && data.id !== id)) return;
+    if (
+      failed ||
+      error ||
+      !data ||
+      data.status !== "public_test_passed" ||
+      !data.verifiedPublicAssetUrl ||
+      !isDriveAssetUrl(data.verifiedPublicAssetUrl)
+    )
+      onSettled?.(id);
+  }, [id, loading, data, error, failed, onSettled]);
   useEffect(() => {
     if (!url || !isBridgeImageUrl(url)) return;
     let disposed = false,
@@ -164,6 +178,9 @@ export function MediaImage({
             loading="lazy"
             referrerPolicy="strict-origin-when-cross-origin"
             crossOrigin="anonymous"
+            onLoad={() => {
+              if (id) onSettled?.(id);
+            }}
             onError={() => setFailed(true)}
           />
         ) : (
@@ -178,14 +195,22 @@ export function MediaImage({
   );
 }
 import { useEffect, useState, useMemo } from "react";
-export function Brand({ large = false }: { large?: boolean }) {
+export function Brand({
+  large = false,
+  onLogoSettled,
+}: {
+  large?: boolean;
+  onLogoSettled?: (id: string) => void;
+}) {
   const { store, language, t } = useUI();
   return (
     <Link to="/" className={"brand " + (large ? "brand-large" : "")}>
       <span className="brand-mark">
         {store.logoMediaId ? (
           <MediaImage
+            key={store.logoMediaId}
             id={store.logoMediaId}
+            onSettled={onLogoSettled}
             alt={localize(store.name, language)}
           />
         ) : (

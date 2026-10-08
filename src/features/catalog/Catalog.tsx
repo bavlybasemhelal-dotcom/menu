@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useParams } from "react-router-dom";
 import {
   Search,
@@ -62,20 +62,48 @@ export function CatalogLayout() {
 }
 function Splash() {
   const { store, storeLoading, storeExists, t, language } = useUI(),
-    [visible, setVisible] = useState(!sessionStorage.getItem("catalog-splash"));
+    brandingKey = JSON.stringify([shopId, store.name, store.logoMediaId]),
+    [visible, setVisible] = useState(() => {
+      const viewed = sessionStorage.getItem("catalog-splash");
+      return (
+        !viewed ||
+        (!storeLoading && viewed !== "pending" && viewed !== brandingKey)
+      );
+    }),
+    [settledLogo, setSettledLogo] = useState(""),
+    checkedVisit = useRef(!storeLoading),
+    logoLoading = !!store.logoMediaId && settledLogo !== store.logoMediaId;
   useEffect(() => {
     if (storeLoading) return;
+    const viewed = sessionStorage.getItem("catalog-splash");
+    if (viewed === "pending") {
+      sessionStorage.setItem("catalog-splash", brandingKey);
+      checkedVisit.current = true;
+      setVisible(false);
+      return;
+    }
+    if (checkedVisit.current) return;
+    checkedVisit.current = true;
+    setVisible(viewed !== brandingKey);
+  }, [storeLoading, brandingKey]);
+  useEffect(() => {
+    if (!visible || storeLoading || logoLoading) return;
     const id = setTimeout(() => {
       setVisible(false);
-      sessionStorage.setItem("catalog-splash", "1");
+      sessionStorage.setItem("catalog-splash", brandingKey);
     }, 1400);
     return () => clearTimeout(id);
-  }, [storeLoading]);
+  }, [visible, storeLoading, logoLoading, brandingKey]);
   if (!visible) return null;
   return (
-    <div className="splash">
+    <div
+      className="splash"
+      role="region"
+      aria-label={t("تقديم المحل", "Store introduction")}
+      aria-busy={storeLoading || logoLoading}
+    >
       <Controls />
-      <Brand large />
+      <Brand large onLogoSettled={setSettledLogo} />
       <p>
         {localize(store.description, language) ||
           t(
@@ -83,12 +111,20 @@ function Splash() {
             "Your store’s products and offers, in one place",
           )}
       </p>
-      {storeLoading ? <Loading /> : <div className="splash-progress" />}
+      {storeLoading || logoLoading ? (
+        <Loading />
+      ) : (
+        <div className="splash-progress" />
+      )}
       <Button
+        type="button"
         className="button-ghost"
         onClick={() => {
           setVisible(false);
-          sessionStorage.setItem("catalog-splash", "1");
+          sessionStorage.setItem(
+            "catalog-splash",
+            storeLoading ? "pending" : brandingKey,
+          );
         }}
       >
         {t("تصفح الآن", "Browse now")}

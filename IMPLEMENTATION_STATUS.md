@@ -1,5 +1,18 @@
 # Implementation status
 
+## 2026-10-09 — Dynamic splash store identity
+
+Checklist:
+- [x] Audit the existing shared Firestore branding and both 01-splash design references. The splash already used dynamic Brand, but its 1.4 s timeout could dismiss before the Drive logo loaded, and compact header styles clipped/shrank the large name on mobile.
+- [x] Keep the splash until store data and the selected logo finish loading (or fail), then retain the 1.4 s introduction. Browse now stays available during loading. The shared logo reports native image load, fetch/decode error and missing/unverified metadata; logo changes mount a fresh media reader. Names/logos remain Firestore data, with no fixed brand or catalog content.
+- [x] Tie the per-session introduction marker to the saved bilingual name and logo reference. A later visit after identity changes shows the updated introduction; unrelated navigation with unchanged branding skips the repeat. Changing branding does not reopen the splash over an already-browsing visitor.
+- [x] Show the complete name with responsive multiline text, a larger contained logo and scoped splash typography that compact header rules cannot override. Shared header/footer logos also use contain rather than cropping. Arabic/English and Light/Dark controls stay available.
+- [x] Targeted browser regressions passed for delayed Drive replies, saved name/logo, updated identity on revisit, missing/broken logos and manual browse. These use real Rules-enforced local Firestore edits with synthetic Google responses; they are not a new real Drive test.
+- [x] Final full browser regression: 8 PASS (2.5 min), including all existing catalog/Drive/theme/language/density checks and both splash scenarios. Also covers Browse before the first Firestore snapshot completing without an unwanted repeat. Final typecheck/lint/build PASS. Slow-image regression holds responses longer than the introduction while staying below network timeouts, and resumes the test clock for fresh SDK initialization.
+- [x] Inspect .local/splash-dynamic-light-ar-375.png and .local/splash-dynamic-dark-en-1440.png: complete responsive names, contained logos and coherent Light/Dark styling. These use synthetic logo bytes, not fixed production branding.
+- [x] Firebase Hosting release completed (32 files, 3 changed assets). Root, index-YZmr99Lb.js and index-CW9B7fkD.css return HTTP 200 and match local SHA-256 hashes. Firebase/Drive configuration, Rules and production documents were unchanged.
+- [x] Read-only real hosted browser proof PASS at 2026-10-08T23:34:32.995Z (2026-10-09 local): fresh unsigned visitor, zero mocked requests/production writes, saved Arabic name ماركت المحبة appears in the splash and header, automatic transition works and unchanged branding skips the repeat. Evidence: .local/live-splash-proof.json and .local/splash-live-hosted-375.png. Actual shop currently has no logo selected; production-logo rendering is not claimed for this check. Saved/replaced logo behavior is proven by emulator/browser scenarios, while real Drive image delivery was independently proven in the prior release.
+
 ## 2026-10-09 — Inline image editing, Media removal and real Drive image delivery
 
 This section supersedes the historical embedded-image blocker and incomplete-upload notes below. No additional provider, paid service, Firebase Storage, Function or billing change was introduced.
