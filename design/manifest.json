@@ -1,0 +1,186 @@
+{
+  "version": "1.0",
+  "note": "Screens are AI-generated concept images, not real application assets or data.",
+  "screens": [
+    {
+      "id": "01",
+      "slug": "splash",
+      "title_ar": "شاشة البداية",
+      "suggested_route": "/",
+      "light": {
+        "path": "design/light/01-splash.png",
+        "width": 941,
+        "height": 1672,
+        "sha256": "d91dcf36cefc7dd62b36bb97d7cda487018dfd5e997d116be4b8321a15c9ec71"
+      },
+      "dark": {
+        "path": "design/dark/01-splash.png",
+        "width": 941,
+        "height": 1672,
+        "sha256": "0962ac8dd465b3ce1620146c71d352dc6147668bf5d2fcae72cef355c70651dc"
+      }
+    },
+    {
+      "id": "02",
+      "slug": "catalog-home",
+      "title_ar": "الرئيسية والكتالوج",
+      "suggested_route": "/catalog",
+      "light": {
+        "path": "design/light/02-catalog-home.png",
+        "width": 941,
+        "height": 1672,
+        "sha256": "62f15408e30c600811b0d4a11b6f126ac558662714b02c09864e4a13d4c12e6c"
+      },
+      "dark": {
+        "path": "design/dark/02-catalog-home.png",
+        "width": 941,
+        "height": 1672,
+        "sha256": "5f0f4a74f067e1f35f46ddf8e7ccb124ae3f8b2a13f02709efacd33a2e708fa2"
+      }
+    },
+    {
+      "id": "03",
+      "slug": "offers",
+      "title_ar": "العروض والخصومات",
+      "suggested_route": "/offers",
+      "light": {
+        "path": "design/light/03-offers.png",
+        "width": 941,
+        "height": 1672,
+        "sha256": "57dfec2ac0e0f98634b2194f67806924cae72e650bb8461d7c810d3594194174"
+      },
+      "dark": {
+        "path": "design/dark/03-offers.png",
+        "width": 941,
+        "height": 1672,
+        "sha256": "9a285bd798cb97adaed13ffab09b227712cc9839e0fb10753504a69437ce44a8"
+      }
+    },
+    {
+      "id": "04",
+      "slug": "product-detail",
+      "title_ar": "تفاصيل المنتج",
+      "suggested_route": "/products/:id",
+      "light": {
+        "path": "design/light/04-product-detail.png",
+        "width": 941,
+        "height": 1672,
+        "sha256": "ced452eb3911af06acd23b58158047b3bdf4efe90704a1989a2093b589108bc3"
+      },
+      "dark": {
+        "path": "design/dark/04-product-detail.png",
+        "width": 941,
+        "height": 1672,
+        "sha256": "a7a7a075a2c380fed3b71d1381e9a88e8678b89171f27f0ae088b2c417a47215"
+      }
+    },
+    {
+      "id": "05",
+      "slug": "admin-login",
+      "title_ar": "دخول الإدارة",
+      "suggested_route": "/admin/login",
+      "light": {
+        "path": "design/light/05-admin-login.png",
+        "width": 941,
+        "height": 1672,
+        "sha256": "32e6332cca789f31fa009de787a39bef4a63b1d8651d0b72cd5d49fda3d1ea3d"
+      },
+      "dark": {
+        "path": "design/dark/05-admin-login.png",
+        "width": 941,
+        "height": 1672,
+        "sha256": "38f470e47214d52e30e6f06baaa77df4779c9019dca714a52b0db1c591d03a0e"
+      }
+    },
+    {
+      "id": "06",
+      "slug": "admin-dashboard",
+      "title_ar": "لوحة التحكم",
+      "suggested_route": "/admin",
+      "light": {
+        "path": "design/light/06-admin-dashboard.png",
+        "width": 941,
+        "height": 1672,
+        "sha256": "259f6ca139389fb5ec358ffe8b4f1c1ef99821d161c5117efef812917772d4ac"
+      },
+      "dark": {
+        "path": "design/dark/06-admin-dashboard.png",
+        "width": 941,
+        "height": 1672,
+        "sha256": "9e253db4e1f8cda3bfe95db03488db245f30ee67be85356ea4da4d7a8ac609b3"
+      }
+    },
+    {
+      "id": "07",
+      "slug": "shop-settings",
+      "title_ar": "إعدادات المتجر",
+      "suggested_route": "/admin/settings",
+      "light": {
+        "path": "design/light/07-shop-settings.png",
+        "width": 941,
+        "height": 1672,
+        "sha256": "f2d9e53c72ac4ea35b333276eea6c923ec00fe6d4c8b2e705ef8ed422525ec67"
+      },
+      "dark": {
+        "path": "design/dark/07-shop-settings.png",
+        "width": 941,
+        "height": 1672,
+        "sha256": "f07f77b78fc7a1a0cf018a5d67ddd48aa7bcf4e0f9f5b39fede04e3fd3281355"
+      }
+    },
+    {
+      "id": "08",
+      "slug": "drive-setup",
+      "title_ar": "ربط Google Drive",
+      "suggested_route": "/admin/integrations/google-drive",
+      "light": {
+        "path": "design/light/08-drive-setup.png",
+        "width": 941,
+        "height": 1672,
+        "sha256": "b551f1469317938bf59b987137539468876185d61223b134e1eab1c347669e10"
+      },
+      "dark": {
+        "path": "design/dark/08-drive-setup.png",
+        "width": 941,
+        "height": 1672,
+        "sha256": "d56d635b76ce3f6f20965580a3c342cbb3f50a934a765e1491ed0683e1e233c9"
+      }
+    },
+    {
+      "id": "09",
+      "slug": "product-management",
+      "title_ar": "إدارة المنتجات",
+      "suggested_route": "/admin/products",
+      "light": {
+        "path": "design/light/09-product-management.png",
+        "width": 941,
+        "height": 1672,
+        "sha256": "3e299ad2e8e5225e74ef1bb0797d2abab960b3173c861b06606eb1147e2a0582"
+      },
+      "dark": {
+        "path": "design/dark/09-product-management.png",
+        "width": 941,
+        "height": 1672,
+        "sha256": "6b33062b5adb6620b501ef7fcdad488fef43dbfe1ffff70e805edae86c239c21"
+      }
+    },
+    {
+      "id": "10",
+      "slug": "product-editor",
+      "title_ar": "إضافة وتحرير منتج",
+      "suggested_route": "/admin/products/new",
+      "light": {
+        "path": "design/light/10-product-editor.png",
+        "width": 941,
+        "height": 1672,
+        "sha256": "4d6bc71a47c49c864d766848de677217dc9627faed275835d107676dbe2efc21"
+      },
+      "dark": {
+        "path": "design/dark/10-product-editor.png",
+        "width": 941,
+        "height": 1672,
+        "sha256": "7de4768b32f601d54aba471dfa8a842e033bce838f6a4e5569b944ae2917a78a"
+      }
+    }
+  ]
+}
