@@ -12,7 +12,7 @@ Checklist:
 - [x] Final targeted browser recheck after hiding inactive single-page controls: PASS (24.5 s), including absence of redundant visitor pagination and working next/first admin navigation. Final lint and typecheck PASS.
 - [x] Firebase Hosting deploy completed (32 files, 3 new/changed assets). Anonymous curl HTTP 200 returned the exact final dist/index.html; SHA-256 of served index-Bf5GAn4u.js and index-DFqffOmR.css matches the local build. Served CSS contains the six-column layout; demo shop names are absent from the application bundle.
 - [x] Actual anonymous published-data queries returned HTTP 200 with exactly 6 categories, 24 products and 5 offers. Private settings still return 403. An initial Node HTTPS Hosting check failed at the network layer; subsequent independent curl checks succeeded and are the live asset proof.
-- [ ] Commit and push compact UI/demo-source/documentation changes to existing GitHub main.
+- [x] Compact UI/demo-source/documentation changes committed as bad9e89 and pushed successfully to existing GitHub main. Runtime credentials, local publication snapshots/manifests, mock artifacts and screenshots remain excluded.
 
 Visual inspection: .local/compact-demo-public-ar-1440.png, compact-demo-public-en-375.png and compact-demo-admin-ar-1440.png. The synthetic local screenshots contain emulator preview records and are not production-browser proof. Current in-app browser tool cannot initialize (missing runtime assets); no claim of a new live browser screenshot or completed production admin edit is made. Live public data was independently verified over anonymous HTTP.
 
