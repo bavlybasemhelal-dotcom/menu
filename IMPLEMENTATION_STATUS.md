@@ -1,5 +1,13 @@
 # Implementation status
 
+## 2026-10-08 — Owner-authorized GitHub source upload
+
+Initialized this application folder as a Git repository on main and pushed the complete source handoff to https://github.com/bavlybasemhelal-dotcom/menu.git. Initial commit 08433cfc2d8574b8ac0b96a223231292f2cdad81 was confirmed identical to GitHub refs/heads/main using git ls-remote. The remote was empty before the first push; no history was overwritten or force-pushed. Local main tracks origin/main.
+
+Export includes 105 files: application, dependency lockfile, Firebase Rules/indexes/configuration, Apps Script template, tests, documentation and all 20 supplied design references. Staged files total 33.85 MiB (largest 1.97 MiB). Preflight found no private keys, Google/GitHub tokens, client secrets or unintended admin passwords. .env.local, runtime credentials, .local, .firebase, dependencies, build output, test reports and debug logs are excluded; safe environment templates and the isolated demo-souqna emulator configuration are included. Extended .gitignore to ignore other real .env variants while retaining those templates.
+
+This export changes no application behavior and requires no repeat of the prior passing application tests. Real embedded Drive image delivery remains BLOCKED_DRIVE_PUBLIC_MEDIA as recorded below; uploading the source does not resolve that integration gate or declare production readiness.
+
 ## Latest owner amendment — one standard Drive connection
 
 The owner requested removal of the direct OAuth method and all reference-project branding from the client-facing interface. Apps Script is now the only adapter. Removed the method selector, OAuth settings screen/GIS token and resumable-upload code, unused credentials/configuration fields and method-switch advice. The standard generated script and guide have neutral catalog wording. Rules accept only Apps Script and cap configured upload limits at 20 MiB.
