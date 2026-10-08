@@ -338,6 +338,7 @@ export function Pagination({
   first: () => void;
 }) {
   const { t } = useUI();
+  if (page === 1 && !hasNext) return null;
   return (
     <div className="pagination">
       <Button className="button-ghost" disabled={page === 1} onClick={first}>

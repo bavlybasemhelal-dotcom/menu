@@ -1,5 +1,23 @@
 # Implementation status
 
+## 2026-10-09 — Compact UI and owner-requested client presentation
+
+Checklist:
+- [x] Inspect existing source, paired-screen design contract, styling skills and live public catalog before changes. Live shop/categories/products/offers were empty; private Drive configuration was preserved.
+- [x] Compact shared spacing, typography hierarchy, hero, cards, form panels, statistics, sidebar and table rows. Six product columns at 1440 px, five on smaller desktops, four on tablets, three on wide mobile and two on narrow mobile. Touch targets remain at least 44 px on mobile. Product cards keep all configured price levels; full packaging captions remain on detail pages. Single-page pagination is hidden only when there is no next page.
+- [x] Publish editable demo content into actual Firestore with create-only/existence-precondition writes: 1 store, 6 categories, 24 products, 5 offers/banners (two bundles, one special, hero and strip). All use bilingual sample copy, EGP minor units, optional piece/box/carton levels, percentage/fixed discounts, limited/unavailable examples and editable variants. No fake contact numbers or unverified images. Stable demo- IDs; local preflight and created-path manifest retained in ignored .local/demo-export. Commit time: 2026-10-08T17:31:23.537312Z.
+- [x] Recheck seed idempotence: dry-run after commit plans 0 writes, preserves all 36 existing demo documents and does not replace owner edits. No private configuration/media changes.
+- [x] Anonymous real Firestore HTTP reads of store/product/bundle returned 200; privateShopConfig/main returned 403 without credentials.
+- [x] Lint/typecheck/build PASS; 27 unit tests PASS including schema, bilingual data, prices, category references and bundle unit validity. Full 6 browser scenarios PASS (3.3 min) after moving the previous card-only packaging assertion to the full detail page. Includes genuine Rules-enforced emulator admin editing and immediate unsigned visitor updates, all route/theme/language/width checks, and mocked Drive explicitly separated from real integration proof.
+- [x] Final targeted browser recheck after hiding inactive single-page controls: PASS (24.5 s), including absence of redundant visitor pagination and working next/first admin navigation. Final lint and typecheck PASS.
+- [x] Firebase Hosting deploy completed (32 files, 3 new/changed assets). Anonymous curl HTTP 200 returned the exact final dist/index.html; SHA-256 of served index-Bf5GAn4u.js and index-DFqffOmR.css matches the local build. Served CSS contains the six-column layout; demo shop names are absent from the application bundle.
+- [x] Actual anonymous published-data queries returned HTTP 200 with exactly 6 categories, 24 products and 5 offers. Private settings still return 403. An initial Node HTTPS Hosting check failed at the network layer; subsequent independent curl checks succeeded and are the live asset proof.
+- [ ] Commit and push compact UI/demo-source/documentation changes to existing GitHub main.
+
+Visual inspection: .local/compact-demo-public-ar-1440.png, compact-demo-public-en-375.png and compact-demo-admin-ar-1440.png. The synthetic local screenshots contain emulator preview records and are not production-browser proof. Current in-app browser tool cannot initialize (missing runtime assets); no claim of a new live browser screenshot or completed production admin edit is made. Live public data was independently verified over anonymous HTTP.
+
+Existing Drive image-delivery gate remains BLOCKED_DRIVE_PUBLIC_MEDIA. Demo products deliberately have no media IDs; ordinary UI placeholders are shown, with no fake upload/verification. This owner-authorized presentation dataset supersedes the older prohibition on demo production records; it is not a claim of final real-store content or full integration readiness.
+
 ## 2026-10-08 — Owner-authorized GitHub source upload
 
 Initialized this application folder as a Git repository on main and pushed the complete source handoff to https://github.com/bavlybasemhelal-dotcom/menu.git. Initial commit 08433cfc2d8574b8ac0b96a223231292f2cdad81 was confirmed identical to GitHub refs/heads/main using git ls-remote. The remote was empty before the first push; no history was overwritten or force-pushed. Local main tracks origin/main.

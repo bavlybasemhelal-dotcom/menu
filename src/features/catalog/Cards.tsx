@@ -29,7 +29,7 @@ export function ProductCard({
       )}
       <div className="product-info">
         <h3>{name}</h3>
-        <Prices product={product} />
+        <Prices product={product} compact />
         <div className="card-footer">
           <span
             className={

@@ -1,7 +1,13 @@
 import { useUI } from "../../app/context";
 import type { ProductData } from "../products/models";
 import { money, productPrices, piecesPerCarton } from "../products/logic";
-export function Prices({ product }: { product: ProductData }) {
+export function Prices({
+  product,
+  compact = false,
+}: {
+  product: ProductData;
+  compact?: boolean;
+}) {
   const { t, store, language } = useUI();
   const number = (v: number) =>
     new Intl.NumberFormat(language === "ar" ? "ar-EG" : "en-GB").format(v);
@@ -53,7 +59,7 @@ export function Prices({ product }: { product: ProductData }) {
     },
   ];
   return (
-    <>
+    <div className={compact ? "prices prices-compact" : "prices"}>
       {rows
         .filter((row) => row.price != null)
         .map((row) => (
@@ -73,11 +79,11 @@ export function Prices({ product }: { product: ProductData }) {
                 {money(row.base, store.currency, language)}
               </span>
             )}
-            {row.packing && (
+            {!compact && row.packing && (
               <small className="packing-caption">{row.packing}</small>
             )}
           </div>
         ))}
-    </>
+    </div>
   );
 }

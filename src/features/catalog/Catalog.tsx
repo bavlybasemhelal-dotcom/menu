@@ -112,6 +112,7 @@ export function Home() {
     offers = useList("offers", { placement: "hero" }),
     strips = useList("offers", { placement: "strip", pageSize: 4 }),
     products = useList("products", {
+      pageSize: 36,
       category,
       search,
       discount: onlyDiscount,
@@ -227,7 +228,7 @@ export function Home() {
       )}
       <Pagination {...products} />
       {strip && (
-        <div style={{ marginTop: 35 }}>
+        <div className="catalog-strip">
           <OfferCard offer={strip} />
         </div>
       )}
@@ -283,7 +284,12 @@ function Hero({ offers }: { offers: Offer[] }) {
     return () => clearInterval(id);
   }, [offers.length]);
   return (
-    <section className="hero">
+    <section
+      className={
+        "hero " +
+        (!(offer?.imageMediaId || store.logoMediaId) ? "hero-text-only" : "")
+      }
+    >
       <div>
         <span className="eyebrow">
           <Sparkles size={16} />
@@ -337,14 +343,16 @@ function Hero({ offers }: { offers: Offer[] }) {
           </div>
         )}
       </div>
-      <MediaImage
-        id={offer?.imageMediaId || store.logoMediaId}
-        alt={
-          offer
-            ? localize(offer.name, language)
-            : localize(store.name, language)
-        }
-      />
+      {(offer?.imageMediaId || store.logoMediaId) && (
+        <MediaImage
+          id={offer?.imageMediaId || store.logoMediaId}
+          alt={
+            offer
+              ? localize(offer.name, language)
+              : localize(store.name, language)
+          }
+        />
+      )}
     </section>
   );
 }

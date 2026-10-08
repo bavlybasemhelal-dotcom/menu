@@ -161,8 +161,14 @@ test("admin changes name/logo, creates product, edits price and publishes offer;
   const card = visitor.getByRole("link", { name: productName, exact: true });
   await expect(card).toBeVisible();
   await expect(card.locator(".price-value").first()).toContainText("١٢٥");
-  await expect(card.locator("[data-unit=box]")).toContainText("٦");
-  await expect(card.locator("[data-unit=carton]")).toContainText("٢٤");
+  // Compact cards retain prices; the full packaging hierarchy lives in details.
+  const packaging = await context.newPage();
+  await packaging.goto((await card.getAttribute("href"))!);
+  await expect(packaging.locator("[data-unit=box]").first()).toContainText("٦");
+  await expect(packaging.locator("[data-unit=carton]").first()).toContainText(
+    "٢٤",
+  );
+  await packaging.close();
   await page.getByLabel("سعر القطعة", { exact: true }).fill("130.25");
   await page.getByRole("button", { name: "حفظ المنتج", exact: true }).click();
   await expect(card.locator(".price-value").first()).toContainText("١٣٠");

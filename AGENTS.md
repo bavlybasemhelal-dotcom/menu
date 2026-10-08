@@ -19,6 +19,9 @@ These instructions apply to all source edits performed while implementing this h
 9. Currency values in minor units; optional carton price; discount scope and date boundaries; independent bundle price; publish/draft/hidden states.
 10. Do not claim live Firebase/Drive testing, upload completion, deployed website, or production readiness when working with mocks/unconfigured credentials.
 
+### Owner-authorized presentation data — 2026-10-09
+The owner explicitly requested editable demo content on the hosted site to show a client. This supersedes the earlier ban on production demo records for this named presentation dataset only. Demo records are persisted in Firestore under `demo-` IDs, with a bilingual demonstration identity/description and no invented real contact details. Preserve existing records and edits; never import these fixtures into UI components or treat unverified Drive media as published. Images remain optional placeholders until actual Drive delivery passes.
+
 ## Implementation cadence
 - Stage 0: source/repo audit + risk register; Stage 1: real Firebase/Drive POC or honest blocked state; Stage 2: design system and infrastructure; Stage 3: admin CRUD; Stage 4: public UI; Stage 5: automated/accessibility/integration testing; Stage 6: deployment guide, owner-controlled deployment.
 - Work locally without destructive cloud actions. Only deploy after explicit approval and actual configured credentials.

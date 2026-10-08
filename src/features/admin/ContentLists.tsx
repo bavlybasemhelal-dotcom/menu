@@ -69,7 +69,7 @@ export function ProductsList() {
         />
       </div>
       <Panel title={t("تصفية المنتجات", "Filter products")}>
-        <div className="form-grid">
+        <div className="form-grid catalog-filter-grid">
           <Field label={t("حالة النشر", "Publication status")}>
             <select value={status} onChange={(e) => setStatus(e.target.value)}>
               <option value="">{t("كل الحالات", "All statuses")}</option>

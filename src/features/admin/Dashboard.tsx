@@ -119,10 +119,7 @@ export default function Dashboard() {
           </Link>
         }
       />
-      <div
-        className="hero"
-        style={{ gridTemplateColumns: "1fr", minHeight: 160 }}
-      >
+      <div className="hero dashboard-welcome">
         <div>
           <div className="eyebrow">
             <Sparkles size={18} />
