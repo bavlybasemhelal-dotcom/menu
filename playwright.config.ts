@@ -1,4 +1,6 @@
 import { defineConfig } from "@playwright/test";
+// This suite uses local Firebase emulators, never Google VM credentials.
+process.env.METADATA_SERVER_DETECTION = "none";
 export default defineConfig({
   testDir: "tests/e2e",
   workers: 1,

@@ -127,7 +127,11 @@ export default function ImageField({
     setProgress((value) => (value ? { ...value, stage: "ready" } : null));
   }
   return (
-    <div className="image-field">
+    <div
+      className={
+        "image-field " + (folder === "products" ? "product-image-field" : "")
+      }
+    >
       <div className="image-field-toolbar">
         <Button
           type="button"

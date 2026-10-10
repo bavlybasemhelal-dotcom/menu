@@ -17,21 +17,31 @@ import {
   LogOut,
   Image,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { AppProvider, useUI } from "./context";
 import { Header, Loading, Notice, Button, Empty } from "../components/ui";
 import { emulator as emulatorMode } from "../integrations/firebase/client";
-import Login from "../features/admin/Auth";
-import Dashboard from "../features/admin/Dashboard";
-import SettingsPage from "../features/admin/Settings";
-import ProductEditor from "../features/admin/ProductEditor";
-import OfferEditor from "../features/admin/OfferEditor";
-import DriveSetup from "../features/admin/DriveSetup";
-import {
-  ProductsList,
-  OffersList,
-  Categories,
-} from "../features/admin/ContentLists";
+const Login = lazy(() => import("../features/admin/Auth"));
+const Dashboard = lazy(() => import("../features/admin/Dashboard"));
+const SettingsPage = lazy(() => import("../features/admin/Settings"));
+const ProductEditor = lazy(() => import("../features/admin/ProductEditor"));
+const OfferEditor = lazy(() => import("../features/admin/OfferEditor"));
+const DriveSetup = lazy(() => import("../features/admin/DriveSetup"));
+const ProductsList = lazy(() =>
+  import("../features/admin/ContentLists").then((m) => ({
+    default: m.ProductsList,
+  })),
+);
+const OffersList = lazy(() =>
+  import("../features/admin/ContentLists").then((m) => ({
+    default: m.OffersList,
+  })),
+);
+const Categories = lazy(() =>
+  import("../features/admin/ContentLists").then((m) => ({
+    default: m.Categories,
+  })),
+);
 import {
   CatalogLayout,
   Home,
@@ -105,7 +115,9 @@ export function AdminLayout() {
               <LogOut size={15} />
             </Button>
           </div>
-          <Outlet />
+          <Suspense fallback={<Loading />}>
+            <Outlet />
+          </Suspense>
           <footer className="admin-footer">
             <span>
               {t(
@@ -181,7 +193,9 @@ export default function App() {
             element={
               <>
                 <Header />
-                <Login />
+                <Suspense fallback={<Loading />}>
+                  <Login />
+                </Suspense>
               </>
             }
           />
@@ -190,7 +204,9 @@ export default function App() {
             element={
               <>
                 <Header />
-                <Login />
+                <Suspense fallback={<Loading />}>
+                  <Login />
+                </Suspense>
               </>
             }
           />
@@ -207,7 +223,10 @@ export default function App() {
               <Route path="banners" element={<OffersList banners />} />
               <Route path="offers/new" element={<OfferEditor />} />
               <Route path="offers/:id" element={<OfferEditor />} />
-              <Route path="media" element={<Navigate to="/admin/products" replace />} />
+              <Route
+                path="media"
+                element={<Navigate to="/admin/products" replace />}
+              />
               <Route path="drive" element={<DriveSetup />} />
               <Route
                 path="integrations/google-drive"

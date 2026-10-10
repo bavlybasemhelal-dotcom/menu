@@ -27,6 +27,7 @@ test("box-only product, box discount, category edits and hide/delete persist for
   const visitor = await context.newPage();
   const categoryName = "قسم عبوات الاختبار",
     name = "منتج علبة فقط";
+  await page.setViewportSize({ width: 375, height: 900 });
   await login(page);
   await page.goto("/admin/categories");
   await page.getByRole("button", { name: "قسم جديد", exact: true }).click();
@@ -311,11 +312,11 @@ test("anonymous guard, language/theme persistence, responsive pages and no purch
     }
   }
 });
-test("all admin routes support light/dark and Arabic/English at mobile and desktop widths", async ({
-  page,
-}) => {
-  await login(page);
-  for (const width of [375, 768, 1024, 1440]) {
+for (const width of [375, 768, 1024, 1440]) {
+  test(`all admin routes support light/dark and Arabic/English at ${width}px`, async ({
+    page,
+  }) => {
+    await login(page);
     await page.setViewportSize({ width, height: 900 });
     for (const route of [
       "/admin",
@@ -370,10 +371,11 @@ test("all admin routes support light/dark and Arabic/English at mobile and deskt
         .click();
       await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
     }
-  }
-  await page.screenshot({
-    path: ".local/drive-guide-light-ar.png",
-    fullPage: true,
-    animations: "disabled",
+    if (width === 1440)
+      await page.screenshot({
+        path: ".local/drive-guide-light-ar.png",
+        fullPage: true,
+        animations: "disabled",
+      });
   });
-});
+}

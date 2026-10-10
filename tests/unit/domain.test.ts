@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { nextScheduleBoundary } from "../../src/features/products/schedule";
 import {
   emptyProduct,
   productSchema,
@@ -25,6 +26,27 @@ const discount = (target: Discount["target"] = "unit"): Discount => ({
   endsAt: 2000,
 });
 describe("prices and schedules", () => {
+  it("wakes for the next visible offer or discount boundary and honors inclusive ends", () => {
+    const records = [
+      { startsAt: 3000, endsAt: 8000 },
+      { discount: discount() },
+    ];
+    expect(nextScheduleBoundary(records, 900)).toBe(1000);
+    expect(nextScheduleBoundary(records, 1000)).toBe(2001);
+    expect(nextScheduleBoundary(records, 2000)).toBe(2001);
+    expect(nextScheduleBoundary(records, 2001)).toBe(3000);
+    expect(nextScheduleBoundary(records, 8001)).toBeNull();
+  });
+  it("needs no recurring clock for unscheduled content or invalid boundaries", () => {
+    expect(
+      nextScheduleBoundary([
+        emptyProduct(),
+        null,
+        { startsAt: NaN, endsAt: Infinity },
+      ]),
+    ).toBeNull();
+    expect(nextScheduleBoundary({ endsAt: 2000 }, 2000)).toBe(2001);
+  });
   it("unit and carton targets are independent; absence stays null", () => {
     const p = {
       ...emptyProduct(),

@@ -519,7 +519,7 @@ export function ProductDetail() {
     <>
       <Back />
       <div className="detail-grid">
-        <div className="detail-image">
+        <div className="detail-image product-gallery">
           <MediaImage
             id={p.imageMediaIds[image]}
             eager

@@ -212,8 +212,8 @@ export default function Dashboard() {
         {latest.loading ? (
           <Loading />
         ) : latest.data.length ? (
-          <div className="table-wrap">
-            <table className="data-table">
+          <div className="table-wrap responsive-list">
+            <table className="data-table" role="table">
               <thead>
                 <tr>
                   <th>{t("المنتج", "Product")}</th>
@@ -224,17 +224,18 @@ export default function Dashboard() {
               </thead>
               <tbody>
                 {latest.data.map((p) => (
-                  <tr key={p.id}>
-                    <td>
+                  <tr key={p.id} role="row">
+                    <td className="admin-card-title" role="cell">
                       <div className="table-product">
                         <MediaImage
                           id={p.imageMediaIds[0]}
+                          revision={p.updatedAt}
                           alt={localize(p.name, language)}
                         />
-                        {localize(p.name, language)}
+                        <span>{localize(p.name, language)}</span>
                       </div>
                     </td>
-                    <td>
+                    <td data-label={t("سعر القطعة", "Unit price")} role="cell">
                       {p.unitPriceMinor === null
                         ? "—"
                         : formatMoney(
@@ -243,7 +244,7 @@ export default function Dashboard() {
                             language,
                           )}
                     </td>
-                    <td>
+                    <td className="admin-card-status" role="cell">
                       <span className="badge">
                         {t(
                           p.status === "published"
@@ -255,8 +256,11 @@ export default function Dashboard() {
                         )}
                       </span>
                     </td>
-                    <td>
-                      <Link to={"/admin/products/" + p.id}>
+                    <td className="admin-card-actions" role="cell">
+                      <Link
+                        className="admin-edit-link"
+                        to={"/admin/products/" + p.id}
+                      >
                         {t("تعديل", "Edit")}
                       </Link>
                     </td>

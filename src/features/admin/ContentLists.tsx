@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Plus, Pencil, Trash2, EyeOff, Eye, Search } from "lucide-react";
 import { useUI } from "../../app/context";
@@ -30,6 +30,7 @@ import ImageField, { useImageWork } from "./ImageField";
 export function ProductsList() {
   const { t, language, store } = useUI(),
     [search, setSearch] = useState(""),
+    [queryText, setQueryText] = useState(""),
     [status, setStatus] = useState(""),
     [availability, setAvailability] = useState(""),
     [category, setCategory] = useState(""),
@@ -37,13 +38,20 @@ export function ProductsList() {
     categories = useList("categories", { admin: true }),
     list = useList("products", {
       admin: true,
-      search: normalizeSearch(search),
+      search: queryText,
       status,
       availability,
       category,
       discount,
     }),
     a = useAction();
+  useEffect(() => {
+    const timer = setTimeout(
+      () => setQueryText(normalizeSearch(search).slice(0, 30)),
+      250,
+    );
+    return () => clearTimeout(timer);
+  }, [search]);
   return (
     <>
       <PageTitle
@@ -122,8 +130,8 @@ export function ProductsList() {
         {list.loading ? (
           <Loading />
         ) : list.data.length ? (
-          <div className="table-wrap">
-            <table className="data-table">
+          <div className="table-wrap responsive-list product-admin-list">
+            <table className="data-table" role="table">
               <thead>
                 <tr>
                   <th>{t("المنتج", "Product")}</th>
@@ -136,32 +144,33 @@ export function ProductsList() {
               </thead>
               <tbody>
                 {list.data.map((p) => (
-                  <tr key={p.id}>
-                    <td>
+                  <tr key={p.id} role="row">
+                    <td className="admin-card-title" role="cell">
                       <div className="table-product">
                         <MediaImage
                           id={p.imageMediaIds[0]}
+                          revision={p.updatedAt}
                           alt={localize(p.name, language)}
                         />
-                        {localize(p.name, language)}
+                        <span>{localize(p.name, language)}</span>
                       </div>
                     </td>
-                    <td>
+                    <td data-label={t("القطعة", "Unit")} role="cell">
                       {p.unitPriceMinor === null
                         ? "—"
                         : money(p.unitPriceMinor, store.currency, language)}
                     </td>
-                    <td>
+                    <td data-label={t("العلبة", "Box")} role="cell">
                       {p.boxPriceMinor == null
                         ? "—"
                         : money(p.boxPriceMinor, store.currency, language)}
                     </td>
-                    <td>
+                    <td data-label={t("الكرتونة", "Carton")} role="cell">
                       {p.cartonPriceMinor === null
                         ? "—"
                         : money(p.cartonPriceMinor, store.currency, language)}
                     </td>
-                    <td>
+                    <td className="admin-card-status" role="cell">
                       <span
                         className={
                           "badge " +
@@ -178,13 +187,16 @@ export function ProductsList() {
                         )}
                       </span>
                     </td>
-                    <td>
+                    <td className="admin-card-actions" role="cell">
                       <div className="table-actions">
                         <Link
                           aria-label={t("تعديل", "Edit")}
                           to={"/admin/products/" + p.id}
                         >
                           <Pencil size={16} />
+                          <span className="admin-action-label">
+                            {t("تعديل", "Edit")}
+                          </span>
                         </Link>
                         <Button
                           disabled={a.busy}
@@ -212,6 +224,11 @@ export function ProductsList() {
                           ) : (
                             <Eye size={16} />
                           )}
+                          <span className="admin-action-label">
+                            {p.status === "published"
+                              ? t("إخفاء", "Hide")
+                              : t("نشر", "Publish")}
+                          </span>
                         </Button>
                         <Confirm
                           title={t(
@@ -225,6 +242,9 @@ export function ProductsList() {
                             aria-label={t("حذف", "Delete")}
                           >
                             <Trash2 size={16} />
+                            <span className="admin-action-label">
+                              {t("حذف", "Delete")}
+                            </span>
                           </Button>
                         </Confirm>
                       </div>
@@ -322,8 +342,8 @@ export function OffersList({ banners = false }: { banners?: boolean }) {
         {list.loading ? (
           <Loading />
         ) : (
-          <div className="table-wrap">
-            <table className="data-table">
+          <div className="table-wrap responsive-list">
+            <table className="data-table" role="table">
               <thead>
                 <tr>
                   <th>{t("الاسم", "Name")}</th>
@@ -335,15 +355,29 @@ export function OffersList({ banners = false }: { banners?: boolean }) {
               </thead>
               <tbody>
                 {list.data.map((o) => (
-                  <tr key={o.id}>
-                    <td>{localize(o.name, language)}</td>
-                    <td>
+                  <tr key={o.id} role="row">
+                    <td className="admin-card-title" role="cell">
+                      {localize(o.name, language)}
+                    </td>
+                    <td data-label={t("نوع العرض", "Type")} role="cell">
                       {o.type === "bundle"
                         ? t("باقة", "Bundle")
                         : t("خاص", "Special")}{" "}
-                      · {o.placement}
+                      ·{" "}
+                      {t(
+                        o.placement === "hero"
+                          ? "رئيسي"
+                          : o.placement === "strip"
+                            ? "شريط"
+                            : "العروض",
+                        o.placement === "hero"
+                          ? "Hero"
+                          : o.placement === "strip"
+                            ? "Strip"
+                            : "Offers",
+                      )}
                     </td>
-                    <td>
+                    <td data-label={t("السعر", "Price")} role="cell">
                       {(o.type === "bundle"
                         ? o.bundleFinalPriceMinor
                         : o.specialDisplayPriceMinor) === null
@@ -356,7 +390,7 @@ export function OffersList({ banners = false }: { banners?: boolean }) {
                             language,
                           )}
                     </td>
-                    <td>
+                    <td className="admin-card-status" role="cell">
                       <span
                         className={
                           "badge " + (o.needsReview ? "badge-warning" : "")
@@ -374,13 +408,16 @@ export function OffersList({ banners = false }: { banners?: boolean }) {
                             )}
                       </span>
                     </td>
-                    <td>
+                    <td className="admin-card-actions" role="cell">
                       <div className="table-actions">
                         <Link
                           to={"/admin/offers/" + o.id}
                           aria-label={t("تعديل", "Edit")}
                         >
                           <Pencil size={16} />
+                          <span className="admin-action-label">
+                            {t("تعديل", "Edit")}
+                          </span>
                         </Link>
                         <Button
                           className="button-ghost"
@@ -408,6 +445,11 @@ export function OffersList({ banners = false }: { banners?: boolean }) {
                           ) : (
                             <Eye size={16} />
                           )}
+                          <span className="admin-action-label">
+                            {o.status === "published"
+                              ? t("إخفاء", "Hide")
+                              : t("نشر", "Publish")}
+                          </span>
                         </Button>
                         <Confirm
                           title={t("حذف العرض؟", "Delete offer?")}
@@ -418,6 +460,9 @@ export function OffersList({ banners = false }: { banners?: boolean }) {
                             aria-label={t("حذف", "Delete")}
                           >
                             <Trash2 size={16} />
+                            <span className="admin-action-label">
+                              {t("حذف", "Delete")}
+                            </span>
                           </Button>
                         </Confirm>
                       </div>
@@ -580,8 +625,8 @@ export function Categories() {
         {list.loading ? (
           <Loading />
         ) : (
-          <div className="table-wrap">
-            <table className="data-table">
+          <div className="table-wrap responsive-list">
+            <table className="data-table" role="table">
               <thead>
                 <tr>
                   <th>{t("القسم", "Category")}</th>
@@ -592,13 +637,22 @@ export function Categories() {
               </thead>
               <tbody>
                 {list.data.map((c) => (
-                  <tr key={c.id}>
-                    <td>{localize(c.name, language)}</td>
-                    <td>{c.order}</td>
-                    <td>
-                      {t(c.status === "published" ? "ظاهر" : "مخفي", c.status)}
+                  <tr key={c.id} role="row">
+                    <td className="admin-card-title" role="cell">
+                      {localize(c.name, language)}
                     </td>
-                    <td>
+                    <td data-label={t("الترتيب", "Order")} role="cell">
+                      {c.order}
+                    </td>
+                    <td className="admin-card-status" role="cell">
+                      <span className="badge">
+                        {t(
+                          c.status === "published" ? "ظاهر" : "مخفي",
+                          c.status === "published" ? "Visible" : "Hidden",
+                        )}
+                      </span>
+                    </td>
+                    <td className="admin-card-actions" role="cell">
                       <div className="table-actions">
                         <Button
                           className="button-ghost"
@@ -611,6 +665,9 @@ export function Categories() {
                           }}
                         >
                           <Pencil size={16} />
+                          <span className="admin-action-label">
+                            {t("تعديل", "Edit")}
+                          </span>
                         </Button>
                         <Confirm
                           title={t(
@@ -624,6 +681,9 @@ export function Categories() {
                             aria-label={t("حذف", "Delete")}
                           >
                             <Trash2 size={16} />
+                            <span className="admin-action-label">
+                              {t("حذف", "Delete")}
+                            </span>
                           </Button>
                         </Confirm>
                       </div>

@@ -17,6 +17,7 @@ import type {
 } from "../../features/products/models";
 import { db, shopId, auth } from "./client";
 import { decode } from "./codec";
+import { useScheduleRefresh } from "../../features/products/schedule";
 // Deduplicate simultaneous reads (e.g. splash/header/hero logo), without retaining
 // permission-sensitive metadata after the request or mixing authenticated users.
 const documentReads = new Map<string, ReturnType<typeof getDocFromServer>>();
@@ -41,6 +42,7 @@ export function useDocument<T>(
     loading: boolean;
     error: string;
   }>({ data: null, loading: !!path, error: "" });
+  useScheduleRefresh(state.data);
   useEffect(() => {
     if (!path || !db) {
       set({
@@ -136,6 +138,7 @@ export function useList<K extends CollectionName>(
     last: QueryDocumentSnapshot | null;
     hasNext: boolean;
   }>({ data: [], loading: true, error: "", last: null, hasNext: false });
+  useScheduleRefresh(state.data);
   useEffect(() => {
     setCursor(null);
     setPage(1);

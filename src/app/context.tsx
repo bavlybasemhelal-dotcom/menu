@@ -37,11 +37,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState(
     localStorage.getItem("catalog-theme") === "dark" ? "dark" : "light",
   );
-  const [, tick] = useState(0);
-  useEffect(() => {
-    const id = setInterval(() => tick((v) => v + 1), 1000);
-    return () => clearInterval(id);
-  }, []);
   const shop = useDocument<StorePublic>("shops/" + shopId);
   const translate = useCallback(
     (ar: string, en: string) => (language === "ar" ? ar : en),

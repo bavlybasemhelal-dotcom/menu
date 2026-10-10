@@ -68,7 +68,7 @@ test("demo catalog remains editable with compact, responsive public and admin la
         .first()
         .evaluate((el) => el.getBoundingClientRect().height),
     )
-    .toBeLessThan(340);
+    .toBeLessThan(520); // Portrait photos increase height; retain six compact columns.
   await page.screenshot({
     path: ".local/compact-demo-public-ar-1440.png",
     fullPage: true,
@@ -113,6 +113,50 @@ test("demo catalog remains editable with compact, responsive public and admin la
     .getByRole("button", { name: "دخول لوحة الإدارة", exact: true })
     .click();
   await expect(page).toHaveURL(/\/admin$/);
+  for (const width of [375, 768]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const route of [
+      "/admin",
+      "/admin/products",
+      "/admin/categories",
+      "/admin/offers",
+      "/admin/banners",
+    ]) {
+      await page.goto(route);
+      await expect(
+        page.locator(".responsive-list tbody tr").first(),
+      ).toBeVisible();
+      await expect
+        .poll(() =>
+          page
+            .locator(".responsive-list")
+            .evaluate((el) => el.scrollWidth <= el.clientWidth),
+        )
+        .toBe(true);
+      await expect(page.locator(".responsive-list tbody tr").first()).toHaveCSS(
+        "display",
+        "grid",
+      );
+      await expect(
+        page
+          .locator(".admin-card-actions")
+          .first()
+          .getByRole("link", { name: "تعديل", exact: true })
+          .or(
+            page
+              .locator(".admin-card-actions")
+              .first()
+              .getByRole("button", { name: "تعديل", exact: true }),
+          ),
+      ).toBeVisible();
+      if (width === 375)
+        await page.screenshot({
+          path: `.local/mobile-cards-${route.slice(1).replaceAll("/", "-")}.png`,
+          fullPage: true,
+          animations: "disabled",
+        });
+    }
+  }
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/admin/products");
   await expect(page.locator("tbody tr").first()).toBeVisible();

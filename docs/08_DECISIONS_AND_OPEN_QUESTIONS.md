@@ -1,5 +1,13 @@
 # Decisions, source-vs-inference, external blockers
 
+## Owner portrait/mobile/maintenance amendment — 2026-10-11
+
+Product photos use 3:4 frames with CSS scale-down (full image, original aspect ratio, no upscaling or crop), including detail/editor/admin thumbnails. Admin lists become accessible cards on mobile while preserving dense desktop rows and one query/DOM. The shared theme/language design remains unchanged.
+
+Existing owner display images may be recompressed with the same browser WebP compressor/Apps Script bridge. Verify replacement anonymously before an atomic metadata swap; retain stable media IDs, usage and private originals, and update referenced content revisions for open visitors. Previous display versions become private and are retained for recovery. Do not remove the owner's editable demo catalog. Only known agent-created test products/media are removed with fresh identity/usage guards and server readback; associated Drive files go to recoverable Trash.
+
+Admin routes load on demand. Replace global recurring UI ticks with start/end-boundary timers for scheduled content and foreground refresh, preserving inclusive end boundaries. Admin search uses a short debounce. These changes add no paid service, new data model or storage provider.
+
 ## Owner image-performance amendment — 2026-10-10
 
 The owner requests automatic compression and faster upload/display, followed by Firebase/GitHub release. Upload only an optimized display image by default; an explicit checkbox retains a separate private original. This supersedes mandatory duplication of every original, while retaining private-original sharing restrictions, existing records and optional originalMediaId/recovery. Compression adapts dimensions/quality to placement and preserves GIF animation; originals are never shared.

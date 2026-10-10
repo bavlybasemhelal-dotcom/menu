@@ -721,8 +721,23 @@ input[type="file"] {
   object-fit: cover;
   transition: transform 0.5s;
 }
-.product-card:hover img {
-  transform: scale(1.04);
+.product-card > .media-image img,
+.product-gallery .media-image img,
+.product-image-field .media-image img,
+.table-product .media-image img {
+  object-fit: scale-down;
+  object-position: center;
+}
+.detail-image.product-gallery .media-image,
+.product-image-field .media-image {
+  aspect-ratio: 3/4;
+}
+.product-gallery > .media-image {
+  max-width: 420px;
+  margin-inline: auto;
+}
+.product-gallery .thumbnail-list {
+  justify-content: center;
 }
 .product-info {
   padding: 11px 12px;
@@ -1090,9 +1105,9 @@ input[type="file"] {
   gap: 12px;
 }
 .table-product .media-image {
-  width: 38px;
-  height: 38px;
-  aspect-ratio: 1;
+  width: 30px;
+  height: 40px;
+  aspect-ratio: 3/4;
   border-radius: 11px;
 }
 .table-product svg {
@@ -1115,6 +1130,9 @@ input[type="file"] {
   height: 34px;
   border: 1px solid var(--line);
   border-radius: 9px;
+}
+.admin-action-label {
+  display: none;
 }
 .login-page {
   min-height: calc(100vh - 81px);
@@ -1771,7 +1789,7 @@ input[type="file"] {
   margin-top: 20px;
 }
 .product-card > .media-image {
-  aspect-ratio: 2;
+  aspect-ratio: 3/4;
   flex-shrink: 0;
   border-bottom: 1px solid var(--line);
 }
@@ -1881,5 +1899,148 @@ input[type="file"] {
   }
   .quick-actions small {
     font-size: 0.75rem;
+  }
+}
+@media (max-width: 768px) {
+  .admin-content > .panel:has(.responsive-list) {
+    padding: 0;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+  }
+  .responsive-list,
+  .responsive-list .data-table {
+    overflow: visible;
+    min-width: 0;
+    width: 100%;
+  }
+  .responsive-list .data-table {
+    display: block;
+  }
+  .responsive-list thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    clip-path: inset(50%);
+    overflow: hidden;
+  }
+  .responsive-list tbody {
+    display: grid;
+    gap: 12px;
+  }
+  .responsive-list tbody tr {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px 8px;
+    padding: 14px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+  }
+  .responsive-list td {
+    padding: 0;
+    border: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-weight: 600;
+  }
+  .responsive-list:not(.product-admin-list) tbody tr {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .responsive-list td[data-label]:before {
+    content: attr(data-label);
+    display: block;
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-weight: 400;
+    margin-bottom: 3px;
+  }
+  .responsive-list .admin-card-title {
+    grid-column: 1 / -1;
+    padding-inline-end: 82px;
+    font-size: 0.95rem;
+    line-height: 1.7;
+  }
+  .responsive-list .table-product {
+    min-width: 0;
+    gap: 10px;
+  }
+  .responsive-list .table-product .media-image {
+    width: 48px;
+    height: 64px;
+    border-radius: 10px;
+  }
+  .responsive-list .admin-card-status {
+    position: absolute;
+    inset-inline-end: 14px;
+    top: 16px;
+    max-width: 88px;
+  }
+  .responsive-list .admin-card-status .badge {
+    white-space: normal;
+    text-align: center;
+  }
+  .responsive-list .admin-card-actions {
+    grid-column: 1 / -1;
+    border-top: 1px solid var(--line);
+    padding-top: 10px;
+  }
+  .responsive-list .table-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .responsive-list .table-actions > *,
+  .responsive-list .admin-edit-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex: 1;
+    width: auto;
+    min-height: 44px;
+    padding: 8px;
+    font-size: 0.8rem;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+  .responsive-list .table-actions > :first-child,
+  .responsive-list .admin-edit-link {
+    background: var(--primary-soft);
+    color: var(--primary);
+  }
+  .admin-action-label {
+    display: inline;
+  }
+  .admin-content .mobile-nav a,
+  .admin-content .mobile-nav .button {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .admin-content .save-bar {
+    gap: 8px;
+    bottom: calc(82px + env(safe-area-inset-bottom, 0px));
+  }
+  .admin-content .save-bar .button {
+    flex: 1;
+    min-height: 44px;
+  }
+  .admin-content .image-field-toolbar,
+  .admin-content .button-row {
+    flex-wrap: wrap;
+  }
+  .admin-content .panel,
+  .admin-content .bilingual,
+  .admin-content .variant-row,
+  .admin-content .bundle-row {
+    min-width: 0;
+  }
+  .preview-sidebar {
+    width: 100%;
+    max-width: 280px;
+    margin-inline: auto;
   }
 }
