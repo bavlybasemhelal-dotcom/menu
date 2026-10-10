@@ -36,16 +36,10 @@ import {
   isDriveAssetUrl,
   isBridgeImageUrl,
 } from "../utils/urls";
-import { anonymousImageBlob } from "../integrations/drive/client";
-const imageRequests = new Map<string, Promise<Blob>>();
-function sharedImageRequest(url: string) {
-  let request = imageRequests.get(url);
-  if (!request) {
-    request = anonymousImageBlob(url).finally(() => imageRequests.delete(url));
-    imageRequests.set(url, request);
-  }
-  return request;
-}
+import {
+  publicImage,
+  forgetPublicImage,
+} from "../integrations/drive/image-cache";
 export function Button({
   children,
   className = "",
@@ -85,78 +79,95 @@ export function MediaImage({
   className = "",
   revision,
   onSettled,
+  eager = false,
 }: {
   id: string | null | undefined;
   alt: string;
   className?: string;
   revision?: number;
   onSettled?: (id: string) => void;
+  eager?: boolean;
 }) {
   const { user, store } = useUI();
+  const [activated, setActivated] = useState(eager);
   const mediaRevision = useMemo(
     () => ({ user: user?.uid, store, revision }),
     [user?.uid, store, revision],
   );
   const { data, loading, error } = useDocument<Media>(
-      id ? "shops/" + shopId + "/media/" + id : null,
+      id && activated ? "shops/" + shopId + "/media/" + id : null,
       { live: false, revision: mediaRevision },
     ),
     [failed, setFailed] = useState(false),
-    [asset, setAsset] = useState<{ url: string; src: string } | null>(null),
+    [asset, setAsset] = useState<{
+      url: string;
+      src: string;
+      revision: unknown;
+    } | null>(null),
     element = useRef<HTMLDivElement>(null);
   const url =
-    data && data.id === id && data.status === "public_test_passed"
+    data &&
+    data.id === id &&
+    data.status === "public_test_passed" &&
+    data.publicShared
       ? data.verifiedPublicAssetUrl
       : null;
   useEffect(() => setFailed(false), [id, data?.verifiedPublicAssetUrl]);
   useEffect(() => {
-    if (!id || loading || (data && data.id !== id)) return;
+    if (activated) return;
+    if (eager || typeof IntersectionObserver === "undefined") {
+      setActivated(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setActivated(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "300px" },
+    );
+    if (element.current) observer.observe(element.current);
+    return () => observer.disconnect();
+  }, [activated, eager]);
+  useEffect(() => {
+    if (!activated || !id || loading || (data && data.id !== id)) return;
     if (
       failed ||
       error ||
       !data ||
       data.status !== "public_test_passed" ||
+      !data.publicShared ||
       !data.verifiedPublicAssetUrl ||
       !isDriveAssetUrl(data.verifiedPublicAssetUrl)
     )
       onSettled?.(id);
-  }, [id, loading, data, error, failed, onSettled]);
+  }, [activated, id, loading, data, error, failed, onSettled]);
   useEffect(() => {
     if (!url || !isBridgeImageUrl(url)) return;
     let disposed = false,
-      objectUrl = "",
-      started = false;
+      objectUrl = "";
     const load = async () => {
-      if (started) return;
-      started = true;
       try {
-        const blob = await sharedImageRequest(url);
+        const blob = await publicImage(url, eager);
         if (disposed) return;
         objectUrl = URL.createObjectURL(blob);
-        setAsset({ url, src: objectUrl });
+        setFailed(false);
+        setAsset({ url, src: objectUrl, revision: mediaRevision });
       } catch {
         if (!disposed) setFailed(true);
       }
     };
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          observer.disconnect();
-          void load();
-        }
-      },
-      { rootMargin: "180px" },
-    );
-    if (element.current) observer.observe(element.current);
+    void load();
     return () => {
       disposed = true;
-      observer.disconnect();
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [url]);
+  }, [url, eager, mediaRevision]);
   const src =
     url && isBridgeImageUrl(url)
-      ? asset?.url === url
+      ? asset?.url === url && asset.revision === mediaRevision
         ? asset.src
         : null
       : url;
@@ -168,6 +179,7 @@ export function MediaImage({
       data-file-id={data?.driveFileId}
     >
       {data?.status === "public_test_passed" &&
+      data.publicShared &&
       data.verifiedPublicAssetUrl &&
       isDriveAssetUrl(data.verifiedPublicAssetUrl) &&
       !failed ? (
@@ -175,18 +187,25 @@ export function MediaImage({
           <img
             src={src}
             alt={alt}
-            loading="lazy"
+            loading={eager ? "eager" : "lazy"}
+            fetchPriority={eager ? "high" : "auto"}
+            decoding="async"
             referrerPolicy="strict-origin-when-cross-origin"
             crossOrigin="anonymous"
             onLoad={() => {
               if (id) onSettled?.(id);
             }}
-            onError={() => setFailed(true)}
+            onError={() => {
+              if (url) forgetPublicImage(url);
+              setFailed(true);
+            }}
           />
         ) : (
           <LoaderCircle className="spin" size={22} aria-label={alt} />
         )
-      ) : id ? (
+      ) : id && activated && loading ? (
+        <LoaderCircle className="spin" size={22} aria-label={alt} />
+      ) : id && activated ? (
         <ImageOff size={36} aria-label={alt} />
       ) : (
         <Package size={44} strokeWidth={1.1} aria-label={alt} />
@@ -211,6 +230,7 @@ export function Brand({
             key={store.logoMediaId}
             id={store.logoMediaId}
             onSettled={onLogoSettled}
+            eager
             alt={localize(store.name, language)}
           />
         ) : (

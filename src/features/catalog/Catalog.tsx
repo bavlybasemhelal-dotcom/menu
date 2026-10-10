@@ -386,6 +386,7 @@ function Hero({ offers }: { offers: Offer[] }) {
       {(offer?.imageMediaId || store.logoMediaId) && (
         <MediaImage
           id={offer?.imageMediaId || store.logoMediaId}
+          eager
           revision={offer?.updatedAt}
           alt={
             offer
@@ -521,6 +522,7 @@ export function ProductDetail() {
         <div className="detail-image">
           <MediaImage
             id={p.imageMediaIds[image]}
+            eager
             revision={p.updatedAt}
             alt={name}
           />
@@ -668,7 +670,12 @@ export function OfferDetail() {
       <Back />
       <div className="detail-grid">
         <div className="detail-image">
-          <MediaImage id={o.imageMediaId} revision={o.updatedAt} alt={name} />
+          <MediaImage
+            id={o.imageMediaId}
+            revision={o.updatedAt}
+            alt={name}
+            eager
+          />
         </div>
         <div className="detail-content">
           <span className="eyebrow">

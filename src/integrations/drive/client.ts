@@ -70,7 +70,11 @@ export async function anonymousImageBlob(url: string, signal?: AbortSignal) {
     throw Error("Response is not an image / الرابط لا يعيد صورة");
   return blob;
 }
-export async function testAnonymousImage(url: string, signal?: AbortSignal) {
+export async function testAnonymousImage(
+  url: string,
+  signal?: AbortSignal,
+  onVerified?: (blob: Blob) => void,
+) {
   const blob = await anonymousImageBlob(url, signal);
   const bitmap = await createImageBitmap(blob).catch(() => {
     throw Error(
@@ -80,5 +84,6 @@ export async function testAnonymousImage(url: string, signal?: AbortSignal) {
   const dimensions = { width: bitmap.width, height: bitmap.height };
   bitmap.close();
   if (!dimensions.width || !dimensions.height) throw Error("Invalid image");
+  onVerified?.(blob);
   return dimensions;
 }

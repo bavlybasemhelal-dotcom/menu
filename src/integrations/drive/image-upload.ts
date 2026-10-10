@@ -7,6 +7,8 @@ import { resolveFileMime } from "./file-types";
 import { presentationFile } from "./presentation";
 import { mediaCandidate, storageShare, storageUpload } from "./storage";
 import type { MediaFolder } from "./apps-script";
+import { SCRIPT_MAX_BYTES } from "./apps-script";
+import { primePublicImage, forgetPublicImage } from "./image-cache";
 export type MediaData = Omit<Media, "id" | "createdAt" | "updatedAt">;
 export function mediaData(file: DriveFile): MediaData {
   return {
@@ -67,7 +69,8 @@ export async function verifyImage(
     { ...shared, id, createdAt: 0, updatedAt: 0 },
     config,
   );
-  await testAnonymousImage(url, signal);
+  forgetPublicImage(url);
+  await testAnonymousImage(url, signal, (blob) => primePublicImage(url, blob));
   signal?.throwIfAborted();
   await saveMedia(
     {
@@ -84,34 +87,66 @@ export interface PendingImage {
   data: MediaData;
   id?: string;
 }
+export interface ImageProgress {
+  stage: "compressing" | "original" | "uploading" | "verifying" | "ready";
+  originalBytes: number;
+  displayBytes?: number;
+}
 export async function uploadImage(
   config: PrivateConfig,
   input: File,
   folder: MediaFolder,
   pending: (value: PendingImage) => void,
   signal?: AbortSignal,
+  options: {
+    keepOriginal?: boolean;
+    onProgress?: (progress: ImageProgress) => void;
+  } = {},
 ) {
   const mime = resolveFileMime(input);
   if (!mime.startsWith("image/"))
     throw Error(
       "Choose JPEG, PNG, WebP or GIF / اختر صورة JPEG أو PNG أو WebP أو GIF",
     );
-  if (!input.size || input.size > config.maxImageBytes)
+  if (
+    !input.size ||
+    input.size > SCRIPT_MAX_BYTES ||
+    config.maxImageBytes <= 0 ||
+    (options.keepOriginal && input.size > config.maxImageBytes)
+  )
     throw Error(
       "Image exceeds the configured limit / الصورة أكبر من حد الرفع المحدد في إعدادات Drive",
     );
   const file =
     input.type === mime ? input : new File([input], input.name, { type: mime });
-  // Convert before creating an original so invalid images do not leave an unnecessary upload.
-  const display = mime === "image/gif" ? file : await presentationFile(file);
+  const progress = (stage: ImageProgress["stage"], displayBytes?: number) =>
+    options.onProgress?.({ stage, originalBytes: input.size, displayBytes });
+  progress("compressing");
+  const display = await presentationFile(file, {
+    maxDimension:
+      folder === "branding" ? 800 : folder === "offers" ? 1600 : 1280,
+    targetBytes: Math.min(
+      config.maxImageBytes,
+      (folder === "offers" ? 256 : 192) * 1024,
+    ),
+  });
+  signal?.throwIfAborted();
   if (display.size > config.maxImageBytes)
     throw Error("Display image exceeds the configured limit");
-  const original = await storageUpload(config, file, "originals", signal);
-  const originalMediaId = await recoverMedia(mediaData(original));
+  let originalMediaId: string | null = null;
+  if (options.keepOriginal) {
+    progress("original", display.size);
+    const original = await storageUpload(config, file, "originals", signal);
+    originalMediaId = await recoverMedia(mediaData(original));
+  }
+  progress("uploading", display.size);
   const uploaded = await storageUpload(config, display, folder, signal);
   const data = { ...mediaData(uploaded), originalMediaId };
   pending({ data }); // Retain the Drive file identity if Firestore saving fails; retry never uploads again.
   const id = await recoverMedia(data);
   pending({ data, id });
-  return verifyImage(config, data, id, signal);
+  progress("verifying", display.size);
+  const verifiedId = await verifyImage(config, data, id, signal);
+  progress("ready", display.size);
+  return verifiedId;
 }

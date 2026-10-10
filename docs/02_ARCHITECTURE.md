@@ -1,5 +1,9 @@
 # Technical architecture — Souqna catalog
 
+## Latest image-performance amendment — 2026-10-10
+
+Browser compression now adapts WebP quality/dimensions to each image placement. The default uploads only the display copy; an optional checkbox archives the untouched original privately using the existing originals folder/model. GIF animation is preserved. Public image rendering reuses bounded short-lived memory/CacheStorage bytes after fresh authorized Firestore metadata reads, with four parallel tokenless image fetches, viewport deferral and priority for branding/detail covers. Publication/repair ignores cache and verifies a fresh Google response. No script deployment, public read-policy relaxation, new backend or paid service is required. See docs/08_DECISIONS_AND_OPEN_QUESTIONS.md for cache/revocation and first-read limits. This amendment supersedes earlier unconditional original duplication and memory-only byte reuse descriptions below.
+
 ## 1. Stack and boundaries
 
 | Layer | Technology | Constraint |

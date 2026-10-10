@@ -1,5 +1,11 @@
 # Decisions, source-vs-inference, external blockers
 
+## Owner image-performance amendment — 2026-10-10
+
+The owner requests automatic compression and faster upload/display, followed by Firebase/GitHub release. Upload only an optimized display image by default; an explicit checkbox retains a separate private original. This supersedes mandatory duplication of every original, while retaining private-original sharing restrictions, existing records and optional originalMediaId/recovery. Compression adapts dimensions/quality to placement and preserves GIF animation; originals are never shared.
+
+Allow a small temporary browser cache of already-public validated image bytes (10 minute validity, 64 entries/24 MiB), alongside memory reuse. It stores no authentication or Firestore data, is not another storage provider, and does not change durable storage: files stay in Drive and metadata in Firestore. Rendering still requires a fresh server-authorized metadata read on mount/revision, with UID-scoped in-flight deduplication. Publication/repair always performs a new anonymous network fetch/decode. Invalid/private metadata cannot render from this cache, failed reads are not cached, and immutable replacement Drive IDs prevent serving an old logo/product image. Local repair/revoke clears the corresponding entry. A direct external Drive-only revocation can take up to cache validity to affect a previously downloaded public image; browser caching cannot withdraw copies already viewed/downloaded. Cold first reads retain Google's redirect latency.
+
 The current implementation uses only Apps Script, with inline media editors and real anonymous image acceptance proven on 2026-10-09. Later amendments below supersede the historical setup blockers and direct-adapter notes.
 
 ## Historical owner amendment: reference Nexara Drive connection

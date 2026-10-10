@@ -28,12 +28,16 @@ test("mocked Drive protocol: inline images in every editor, private originals, f
     }
   >();
   const payloads: Record<string, unknown>[] = [];
+  const reads = new Map<string, number>();
   let brokenImage = false,
     badAuth = false;
   const handler = async (route: Route) => {
     let data: unknown;
     if (route.request().method() === "GET") {
       expect(route.request().headers().authorization).toBeUndefined();
+      const requestedId =
+        new URL(route.request().url()).searchParams.get("fileId") || "";
+      reads.set(requestedId, (reads.get(requestedId) || 0) + 1);
       const file = files.get(
         new URL(route.request().url()).searchParams.get("fileId") || "",
       );
@@ -160,6 +164,10 @@ test("mocked Drive protocol: inline images in every editor, private originals, f
   }
   await page.goto("/admin/settings");
   await upload("رفع شعار المحل", "inline-logo.png");
+  expect(payloads.filter((p) => p.action === "upload")).toHaveLength(1);
+  expect(
+    [...files.values()].some((f) => f.folderName === "Private Originals"),
+  ).toBe(false);
   await page
     .getByRole("button", { name: "حفظ الإعدادات", exact: true })
     .click();
@@ -179,6 +187,12 @@ test("mocked Drive protocol: inline images in every editor, private originals, f
     "R0lGODlhAQABAIAAAAUEBAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==",
     "base64",
   );
+  await page
+    .getByRole("checkbox", {
+      name: "احتفظ بنسخة أصلية خاصة أيضًا (رفع إضافي)",
+      exact: true,
+    })
+    .check();
   await page.getByLabel("رفع شعار المحل", { exact: true }).setInputFiles({
     name: "replacement.gif",
     mimeType: "image/gif",
@@ -236,6 +250,12 @@ test("mocked Drive protocol: inline images in every editor, private originals, f
     .getByLabel("حالة المنتج", { exact: true })
     .selectOption("published");
   brokenImage = true;
+  await page
+    .getByRole("checkbox", {
+      name: "احتفظ بنسخة أصلية خاصة أيضًا (رفع إضافي)",
+      exact: true,
+    })
+    .check();
   await page.getByLabel("رفع صور المنتج", { exact: true }).setInputFiles({
     name: "inline-product.png",
     mimeType: "image/png",
@@ -275,6 +295,26 @@ test("mocked Drive protocol: inline images in every editor, private originals, f
   const originalId = (await (await fetch(mediaEndpoint)).json()).fields
     .originalMediaId.stringValue;
   await expect(card.locator("img")).toBeVisible();
+  await expect
+    .poll(() =>
+      card.locator("img").evaluate((img: HTMLImageElement) => img.naturalWidth),
+    )
+    .toBe(4);
+  const productFileId = await card
+    .locator(".media-image")
+    .getAttribute("data-file-id");
+  expect(productFileId).toBeTruthy();
+  const readsBeforePriceEdit = reads.get(productFileId!);
+  expect(readsBeforePriceEdit).toBeGreaterThan(0);
+  await page.getByLabel("سعر القطعة", { exact: true }).fill("79");
+  await page.getByRole("button", { name: "حفظ المنتج", exact: true }).click();
+  await expect(card.locator(".price-value").first()).toContainText("٧٩");
+  await expect
+    .poll(() =>
+      card.locator("img").evaluate((img: HTMLImageElement) => img.naturalWidth),
+    )
+    .toBe(4);
+  expect(reads.get(productFileId!)).toBe(readsBeforePriceEdit);
   for (const banner of [false, true]) {
     await page.goto("/admin/offers/new" + (banner ? "?banner=1" : ""));
     await names(

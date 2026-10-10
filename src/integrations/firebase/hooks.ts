@@ -15,8 +15,22 @@ import type {
   CollectionModels,
   CollectionName,
 } from "../../features/products/models";
-import { db, shopId } from "./client";
+import { db, shopId, auth } from "./client";
 import { decode } from "./codec";
+// Deduplicate simultaneous reads (e.g. splash/header/hero logo), without retaining
+// permission-sensitive metadata after the request or mixing authenticated users.
+const documentReads = new Map<string, ReturnType<typeof getDocFromServer>>();
+function serverDocument(path: string) {
+  const key = (auth?.currentUser?.uid || "anonymous") + ":" + path;
+  let request = documentReads.get(key);
+  if (!request) {
+    request = getDocFromServer(doc(db!, path)).finally(() =>
+      documentReads.delete(key),
+    );
+    documentReads.set(key, request);
+  }
+  return request;
+}
 export function useDocument<T>(
   path: string | null,
   options: { live?: boolean; revision?: unknown } = {},
@@ -41,7 +55,7 @@ export function useDocument<T>(
     set({ data: null, loading: true, error: "" });
     if (!live) {
       let active = true;
-      void getDocFromServer(doc(db, path))
+      void serverDocument(path)
         .then((s) => {
           if (active)
             set({

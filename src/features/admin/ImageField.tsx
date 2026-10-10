@@ -30,7 +30,9 @@ import {
   uploadImage,
   verifyImage,
   type PendingImage,
+  type ImageProgress,
 } from "../../integrations/drive/image-upload";
+import { forgetPublicImage } from "../../integrations/drive/image-cache";
 import type { MediaFolder } from "../../integrations/drive/apps-script";
 import type { DriveFile } from "../../integrations/drive/client";
 import type { Media, PrivateConfig } from "../products/models";
@@ -61,6 +63,8 @@ export default function ImageField({
   const settings = normalizeConfig(config.data),
     ready = storageReady(settings);
   const [pending, setPending] = useState<PendingImage | null>(null),
+    [keepOriginal, setKeepOriginal] = useState(false),
+    [progress, setProgress] = useState<ImageProgress | null>(null),
     [preview, setPreview] = useState(""),
     [recovered, setRecovered] = useState<DriveFile[]>([]),
     [limited, setLimited] = useState(false),
@@ -113,12 +117,14 @@ export default function ImageField({
   }
   async function retry() {
     if (!pending) return;
+    setProgress((value) => (value ? { ...value, stage: "verifying" } : null));
     controller.current = new AbortController();
     const id = pending.id || (await recoverMedia(pending.data));
     setPending({ ...pending, id });
     attach(
       await verifyImage(settings, pending.data, id, controller.current.signal),
     );
+    setProgress((value) => (value ? { ...value, stage: "ready" } : null));
   }
   return (
     <div className="image-field">
@@ -145,6 +151,7 @@ export default function ImageField({
             e.target.value = "";
             if (!file) return;
             setPending(null);
+            setProgress(null);
             setPreview(URL.createObjectURL(file));
             controller.current = new AbortController();
             void run(
@@ -158,6 +165,12 @@ export default function ImageField({
                       if (alive.current) setPending(p);
                     },
                     controller.current!.signal,
+                    {
+                      keepOriginal,
+                      onProgress: (value) => {
+                        if (alive.current) setProgress(value);
+                      },
+                    },
                   ),
                 ),
               t(
@@ -173,10 +186,57 @@ export default function ImageField({
       </div>
       <small>
         {t(
-          "اختيار الصورة يرفعها إلى Drive ويشارك نسخة العرض فقط، ثم يختبر ظهورها بدون تسجيل دخول. الأصل يظل خاصًا.",
-          "Choosing an image uploads it to Drive, shares only the display copy, then verifies anonymous viewing. The original stays private.",
+          "نضغط صور JPEG وPNG وWebP تلقائيًا قبل الرفع لتسريع العرض. صور GIF تحتفظ بالحركة. تُشارك نسخة العرض فقط بعد اختبارها بدون تسجيل دخول.",
+          "JPEG, PNG and WebP images are automatically compressed before upload for faster display. GIF animation is preserved. Only the display copy is shared and verified anonymously.",
         )}
       </small>
+      <label className="image-original-option">
+        <input
+          type="checkbox"
+          checked={keepOriginal}
+          disabled={a.busy}
+          onChange={(e) => setKeepOriginal(e.target.checked)}
+        />
+        {t(
+          "احتفظ بنسخة أصلية خاصة أيضًا (رفع إضافي)",
+          "Also keep a private original (additional upload)",
+        )}
+      </label>
+      {progress && (
+        <div className="image-upload-status" role="status" aria-live="polite">
+          <span>
+            {a.error
+              ? t(
+                  "العملية لم تكتمل؛ يمكنك إعادة المحاولة",
+                  "Operation incomplete; you can retry",
+                )
+              : t(
+                  {
+                    compressing: "جارٍ ضغط الصورة…",
+                    original: "جارٍ رفع الأصل الخاص…",
+                    uploading: "جارٍ رفع صورة العرض…",
+                    verifying: "جارٍ التحقق من ظهور الصورة…",
+                    ready: "الصورة جاهزة",
+                  }[progress.stage],
+                  {
+                    compressing: "Compressing image…",
+                    original: "Uploading private original…",
+                    uploading: "Uploading display image…",
+                    verifying: "Verifying image display…",
+                    ready: "Image ready",
+                  }[progress.stage],
+                )}
+          </span>
+          {progress.displayBytes !== undefined && (
+            <small>
+              {t("الحجم", "Size")}: {Math.ceil(progress.originalBytes / 1024)}{" "}
+              KB → {Math.ceil(progress.displayBytes / 1024)} KB
+              {progress.displayBytes < progress.originalBytes &&
+                ` · ${t("توفير", "saved")} ${Math.round((1 - progress.displayBytes / progress.originalBytes) * 100)}%`}
+            </small>
+          )}
+        </div>
+      )}
       {!ready && (
         <Notice>
           <Link to="/admin/drive">
@@ -477,6 +537,8 @@ function UnusedImageActions({
         )}
         onConfirm={async () => {
           await storageRevoke(settings, await reserveMediaRevoke(media.id));
+          if (media.verifiedPublicAssetUrl)
+            forgetPublicImage(media.verifiedPublicAssetUrl);
           await saveMedia(
             {
               ...(strip(media) as PendingImage["data"]),
